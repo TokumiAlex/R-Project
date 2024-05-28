@@ -26,7 +26,7 @@ V(g)$xCoordinate = attr$xCoordinates
 V(g)$yCoordinate = attr$yCoordinates
 V(g)$name = attr$Names
 
-x11(width=100, height = 50)
+x11(width=100, height = 50)þ
 # Modifica manualmente le posizioni dei nodi
 l = matrix(, nrow=length(V(g)), ncol=2)
 for (i in 1:length(V(g))) {
