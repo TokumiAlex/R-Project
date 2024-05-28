@@ -26,19 +26,29 @@ V(g)$xCoordinate = attr$xCoordinates
 V(g)$yCoordinate = attr$yCoordinates
 V(g)$name = attr$Names
 
-x11(width=100, height = 50)þ
+x11(width=100, height = 50)
 # Modifica manualmente le posizioni dei nodi
 l = matrix(, nrow=length(V(g)), ncol=2)
 for (i in 1:length(V(g))) {
   l[i, 1] <- V(g)[i]$xCoordinate* 4 - 2
   l[i, 2] <- 2.25 - V(g)[i]$yCoordinate * 4
 }
-plot(g, layout = l, rescale=FALSE, vertex.shape = "rectangle", vertex.size=25, vertex.size2= 7)
+continent_colors <- palette.colors(9)[-1]
+plot(g, layout = l, rescale=FALSE, vertex.shape = "rectangle", vertex.size=19, vertex.size2= 3, vertex.label.font = 2, vertex.color = continent_colors[V(g)$continent])
+continent_names <- c("Africa", "Asia", "Europe", "North America", "Oceania", "South America")
+legend("topright", legend = continent_names, fill = continent_colors, cex = 2)
+
+plot(g, layout = l, rescale=FALSE, vertex.size=V(g)$gdp/2000, vertex.label.font = 2)
+
+world_partition_colors <- palette.colors(9)[-1]
+plot(g, layout = l, rescale=FALSE, vertex.label.font = 2, vertex.color = world_partition_colors[V(g)$world_partition], vertex.size=10)
+world_partition_names <- c("Core", "Semiperiphery", "Periphery")
+legend("topright", legend = world_partition_names, fill = world_partition_colors, cex = 2)
 
 
 Y <- as_adjacency_matrix(g)
 
-diag(Y) = NA
+diag(Y) <- NA
 
 rho <- edge_density(g)
 
@@ -54,6 +64,17 @@ tau <- odd_transitivity / odd_rho
 assortativity_continent <- assortativity(g, V(g)$continent, directed = TRUE)
 assortativity_gdp <- assortativity(g, V(g)$gdp, directed = TRUE)
 assortativity_worldpartition <- assortativity(g, V(g)$world_partition, directed = TRUE)
+
+# Create a table with names and values
+table <- data.frame(
+  Names = c("Edge Density", "Reciprocity", "Transitivity", "Odd-Ratio of Edge Density", "Odd-Ratio of Transitivity", "Tau", "Assortativity (Continent)", "Assortativity (GDP)", "Assortativity (World Partition)"),
+  Values = c(rho, reciprocity, transitivity, odd_rho, odd_transitivity, tau, assortativity_continent, assortativity_gdp, assortativity_worldpartition)
+)
+# Save the table as an image
+png("table.png", width = 800*3, height = 400*3, res=72*3)
+grid.table(table)
+dev.off()
+
 
 #Nodal Stats
 
@@ -82,130 +103,34 @@ centr_betw <- centr_betw(g, directed = TRUE)
 palette.colors()
 
 summary(in_degree)
-hist(in_degree, breaks = length(unique(in_degree)))
 in_degree[order(in_degree, decreasing = TRUE)]
 summary(st_in_degree)
-hist(st_in_degree, breaks = length(unique(st_in_degree)))
 plot(g, layout = l, rescale = FALSE, vertex.label.cex = st_in_degree * 5, vertex.size = 0, vertex.label.color = st_in_degree * 8, edge.color = "lightblue")
 
 summary(out_degree)
-hist(out_degree, breaks = length(unique(out_degree)))
 out_degree[order(out_degree, decreasing = TRUE)]
 summary(st_out_degree)
-hist(st_out_degree, breaks = length(unique(st_out_degree)))
 plot(g, layout = l, rescale = FALSE, vertex.label.cex = st_out_degree * 5, vertex.size = 0, vertex.label.color = st_out_degree * 8, edge.color = "lightblue")
 
 summary(closeness_in)
-hist(closeness_in, breaks = length(unique(closeness_in)))
 closeness_in[order(closeness_in, decreasing = TRUE)]
 summary(st_closeness_in)
-hist(st_closeness_in, breaks = length(unique(st_closeness_in)))
 plot(g, layout = l, rescale = FALSE, vertex.label.cex = st_closeness_in * 3, vertex.size = 0, vertex.label.color = st_closeness_in * 8, edge.color = "lightblue")
 
 summary(closeness_out)
-hist(closeness_out, breaks = length(unique(closeness_out)))
 closeness_out[order(closeness_out, decreasing = TRUE)]
 summary(st_closeness_out)
-hist(st_closeness_out, breaks = length(unique(st_closeness_out)))
 plot(g, layout = l, rescale = FALSE, vertex.label.cex = st_closeness_out * 2, vertex.size = 0, vertex.label.color = st_closeness_out * 8, edge.color = "lightblue")
 
 summary(betweenness)
-hist(betweenness, breaks = length(unique(betweenness)))
 betweenness[order(betweenness, decreasing = TRUE)]
 summary(st_betweenness)
-hist(st_betweenness, breaks = length(unique(st_betweenness)))
 plot(g, layout = l, rescale = FALSE, vertex.label.cex = st_betweenness * 20, vertex.size = 0, vertex.label.color = st_betweenness * 8, edge.color = "lightblue")
 
 summary(eigen_centrality)
-hist(eigen_centrality, breaks = length(unique(eigen_centrality)))
 eigen_centrality[order(eigen_centrality, decreasing = TRUE)]
 summary(st_eigen_centrality)
-hist(st_eigen_centrality, breaks = length(unique(st_eigen_centrality)))
 plot(g, layout = l, rescale = FALSE, vertex.label.cex = st_eigen_centrality * 3, vertex.size = 0, vertex.label.color = st_eigen_centrality * 8, edge.color = "lightblue")
-
-
-
-# SRG
-
-n <- vcount(g)
-B <- 1000
-m <-  sum(Y, na.rm = TRUE)
-#CId.sim = C.sim = c() statistiche da simulare
-for (b in 1: B) {
-  Y_sim <- matrix(NA, n, n)
-  ones <- rep(1, m)
-  zeros <- rep(0, n * (n - 1) - m)
-  all <- c(ones, zeros)
-  Y_sim[col(Y_sim) != row(Y_sim)] <- sample(all, n * (n - 1))
-  g_sim <- graph_from_adjacency_matrix(Y_sim)
-  #C.sim[b] = transitivity(g.sim)
-
-}
-
-hist(CId.sim, col = "lightgray", main = "Null distribution", xlim = c(0, 0.5))
-abline(v = CId.obs, col = "red", lwd=2)
-mean(CId.sim >= CId.obs)
-
-### Non-Homogeneous SRG model
-
-aRect_fnc = function(Y, k){
-
-  # Y = adjacency matrix
-  # k = n. of steps in the alternating rectangles algorithm
-  Y1 <- matrix(c(0,1,1,0), 2, 2)
-  Y2 = 1 - Y1
-
-  n = nrow(Y)
-
-  for(s in 1:k){
-    # draw 4 distinct indexes
-    # two rows and two columns
-    ij = sample(1:n,4,replace = F)
-
-    # select the corresponst_in_degreeg sub-matrix
-    rows = ij[1:2]
-    cols = ij[3:4]
-    Yij = Y[rows, cols]
-
-    # perturbation
-    if(all(Yij == Y1)) Yij = Y2 else if(all(Yij == Y2))  Yij = Y1
-
-    Y[rows, cols] = Yij
-  }
-
-  return(Y)
-}
-
-in_sim = out_sim = recip_sim = c()
-for(b in 1:1000){
-  Y_sim = aRect_fnc(Y, 100)
-  g_sim = graph_from_adjacency_matrix(as.matrix(Y_sim))
-  cat(sum(Y != Y_sim, na.rm = T), "*", sep="")
-  in_sim[b] = sd(degree(g_sim, mode = "in"))
-  out_sim[b] = sd(degree(g_sim, mode = "out"))
-  recip_sim[b] = reciprocity(g_sim)
-
-}
-
-par(mfrow = c(1,3))
-hist(in_sim, breaks = length(unique(in_sim)))
-abline(v = sd(in_degree), col = "red", lty = 2)
-st_in_sim
-
-hist(out_sim, breaks = length(unique(out_sim)))
-abline(v = sd(out_degree), col = "red", lty = 2)
-st_out_sim
-
-hist(recip_sim, breaks = length(unique(recip_sim)))
-abline(v = reciprocity, col = "red", lty = 2)
-
-# p-value
-mean(in_sim > sd(in_degree))
-mean(out_sim > sd(out_degree))
-mean(recip_sim > reciprocity)
-
-
-
 
 net = network(Y, directed = T)
 
@@ -222,20 +147,20 @@ net %v% "xCoordinate" = attr$xCoordinates
 net %v% "yCoordinate" = attr$yCoordinates
 net %v% "name" = attr$Names
 
-mod0 = ergm(net ~ edges, 
+mod0 = ergm(net ~ edges,
             control = control.ergm(seed = 1, checkpoint="mod0/step_%03d.RData"))
 summary(mod0)
 
 
-mod1_sender = ergm(net ~ edges + sender, 
+mod1_sender = ergm(net ~ edges + sender,
             control = control.ergm(seed = 1, checkpoint="mod1_sender/step_%03d.RData"))
 summary(mod1_sender)
 
-mod1_receiver = ergm(net ~ edges + receiver, 
+mod1_receiver = ergm(net ~ edges + receiver,
             control = control.ergm(seed = 1, checkpoint="mod1_receiver/step_%03d.RData"))
 summary(mod1_receiver)
 
-mod1_mutual = ergm(net ~ edges + mutual, 
+mod1_mutual = ergm(net ~ edges + mutual,
               control = control.ergm(seed = 1, checkpoint="mod1_mutual/step_%03d.RData"))
 summary(mod1_mutual)
 
@@ -250,12 +175,12 @@ AIC(mod0, mod1_receiver, mod1_mutual)
 
 # mod1_mutual parrebbe essere il modello migliore per ora
 
-mod3 = ergm(net ~ edges + mutual + 
+mod3 = ergm(net ~ edges + mutual +
               nodecov("gdp") + nodecov("xCoordinate") + nodecov("yCoordinate") +
               nodefactor("continent") + nodefactor("partition") +
               absdiff("gdp") + absdiff("xCoordinate") + absdiff("yCoordinate") +
               nodematch("continent") + nodematch("partition"),
-            control = control.ergm(seed = 1, checkpoint="attr_model/step_%03d.RData")) 
+            control = control.ergm(seed = 1, checkpoint="attr_model/step_%03d.RData"))
 summary(mod3)
 mcmc.diagnostics(mod3)
 
@@ -265,100 +190,100 @@ AIC(mod1_mutual, mod3)
 # mod3 sembra il migliore dei due
 
 #Markov
-mod4 = ergm(net ~ edges + mutual + 
+mod4 = ergm(net ~ edges + mutual +
               nodecov("gdp") + nodecov("xCoordinate") + nodecov("yCoordinate") +
               nodefactor("continent") + nodefactor("partition") +
               absdiff("gdp") + absdiff("xCoordinate") + absdiff("yCoordinate") +
               nodematch("continent") + nodematch("partition") +
               + istar(2) + ostar(2) + triangle,
             verbose = 4,
-            control = control.ergm(seed = 1, checkpoint="markov01/step_%03d.RData")) 
+            control = control.ergm(seed = 1, checkpoint="markov01/step_%03d.RData"))
 summary(mod4)
 mcmc.diagnostics(mod4)
 # impossibile da stimare
 
-mod4_noTriangles = ergm(net ~ edges + mutual + 
+mod4_noTriangles = ergm(net ~ edges + mutual +
               nodecov("gdp") + nodecov("xCoordinate") + nodecov("yCoordinate") +
               nodefactor("continent") + nodefactor("partition") +
               absdiff("gdp") + absdiff("xCoordinate") + absdiff("yCoordinate") +
               nodematch("continent") + nodematch("partition") +
               + istar(2) + ostar(2),
             verbose = 4,
-            control = control.ergm(seed = 1, checkpoint="markov02/step_%03d.RData")) 
+            control = control.ergm(seed = 1, checkpoint="markov02/step_%03d.RData"))
 summary(mod4_noTriangles)
 mcmc.diagnostics(mod4_noTriangles)
 # impossibile da stimare
 
-mod5 = ergm(net ~ edges + mutual + 
+mod5 = ergm(net ~ edges + mutual +
               nodecov("gdp") + nodecov("xCoordinate") + nodecov("yCoordinate") +
               nodefactor("continent") + nodefactor("partition") +
               absdiff("gdp") + absdiff("xCoordinate") + absdiff("yCoordinate") +
               nodematch("continent") + nodematch("partition") +
               triangle + gwidegree(decay = 1, fixed = TRUE),
             verbose = 4,
-            control = control.ergm(seed = 1, checkpoint="markov03/step_%03d.RData")) 
+            control = control.ergm(seed = 1, checkpoint="markov03/step_%03d.RData"))
 summary(mod5)
 mcmc.diagnostics(mod5)
 # impossibile da stimare
 
-mod5 = ergm(net ~ edges + mutual + 
+mod5 = ergm(net ~ edges + mutual +
               nodecov("gdp") + nodecov("xCoordinate") + nodecov("yCoordinate") +
               nodefactor("continent") + nodefactor("partition") +
               absdiff("gdp") + absdiff("xCoordinate") + absdiff("yCoordinate") +
               nodematch("continent") + nodematch("partition") +
               triangle + gwodegree(decay = 1, fixed = TRUE),
             verbose = 4,
-            control = control.ergm(seed = 1, checkpoint="markov03gw01/step_%03d.RData")) 
+            control = control.ergm(seed = 1, checkpoint="markov03gw01/step_%03d.RData"))
 summary(mod5)
 mcmc.diagnostics(mod5)
 # impossibile da stimare
 
-mod5 = ergm(net ~ edges + mutual + 
+mod5 = ergm(net ~ edges + mutual +
               nodecov("gdp") + nodecov("xCoordinate") + nodecov("yCoordinate") +
               nodefactor("continent") + nodefactor("partition") +
               absdiff("gdp") + absdiff("xCoordinate") + absdiff("yCoordinate") +
               nodematch("continent") + nodematch("partition") +
               triangle + gwidegree(decay = 1, fixed = TRUE) + gwodegree(decay = 1, fixed = TRUE),
             verbose = 4,
-            control = control.ergm(seed = 1, checkpoint="markov03gw02/step_%03d.RData")) 
+            control = control.ergm(seed = 1, checkpoint="markov03gw02/step_%03d.RData"))
 summary(mod5)
 mcmc.diagnostics(mod5)
 # impossibile da stimare
 
 
-mod6 = ergm(net ~ edges + mutual + 
+mod6 = ergm(net ~ edges + mutual +
               nodecov("gdp") + nodecov("xCoordinate") + nodecov("yCoordinate") +
               nodefactor("continent") + nodefactor("partition") +
               absdiff("gdp") + absdiff("xCoordinate") + absdiff("yCoordinate") +
               nodematch("continent") + nodematch("partition") +
               gwesp(decay = 1, fixed = T) + gwdsp(decay = 1, fixed = T),
             verbose = 4,
-            control = control.ergm(seed = 1, checkpoint="mod6/step_%03d.RData")) 
+            control = control.ergm(seed = 1, checkpoint="mod6/step_%03d.RData"))
 summary(mod6)
 mcmc.diagnostics(mod6)
 # impossibile da stimare
 
-mod6_gwdsp = ergm(net ~ edges + mutual + 
+mod6_gwdsp = ergm(net ~ edges + mutual +
               nodecov("gdp") + nodecov("xCoordinate") + nodecov("yCoordinate") +
               nodefactor("continent") + nodefactor("partition") +
               absdiff("gdp") + absdiff("xCoordinate") + absdiff("yCoordinate") +
               nodematch("continent") + nodematch("partition") +
               gwdsp(decay = 1, fixed = T),
             verbose = 4,
-            control = control.ergm(seed = 1, checkpoint="mod6_u/step_%03d.RData")) 
+            control = control.ergm(seed = 1, checkpoint="mod6_u/step_%03d.RData"))
 summary(mod6_gwdsp)
 mcmc.diagnostics(mod6_gwdsp)
 
 # Devo provare mod6 solo con gwesp pe capire
 
-mod6_gwesp = ergm(net ~ edges + mutual + 
+mod6_gwesp = ergm(net ~ edges + mutual +
                 nodecov("gdp") + nodecov("xCoordinate") + nodecov("yCoordinate") +
                 nodefactor("continent") + nodefactor("partition") +
                 absdiff("gdp") + absdiff("xCoordinate") + absdiff("yCoordinate") +
                 nodematch("continent") + nodematch("partition") +
                 gwesp(decay = 1, fixed = T),
               verbose = 4,
-              control = control.ergm(seed = 1, checkpoint="mod6_gwesp/step_%03d.RData")) 
+              control = control.ergm(seed = 1, checkpoint="mod6_gwesp/step_%03d.RData"))
 summary(mod6_gwesp)
 mcmc.diagnostics(mod6_gwesp)
 
@@ -390,7 +315,7 @@ mean(sd(degree(g, mode = "out")) > null.distr[, 3])
 # SBM
 plotMyMatrix(as.matrix(Y), dimLabels = list(row = 'nations', col = 'nations'))
 
-sbm1 = estimateSimpleSBM(as.matrix(Y), "bernoulli", dimLabels = 'nations', 
+sbm1 = estimateSimpleSBM(as.matrix(Y), "bernoulli", dimLabels = 'nations',
                          estimOptions = list(verbosity = 1))
 
 # let us look at the results
@@ -410,9 +335,9 @@ plot(sbm1, type = "data")
 plot(sbm1, type = "expected")
 # fitted connection probabilities
 plot(sbm1, type = "meso")
-# fitted connection probabilities 
+# fitted connection probabilities
 
-# info on all estimated model is given in 
+# info on all estimated model is given in
 sbm1$storedModels
 
 sbm1$memberships
