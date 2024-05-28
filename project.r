@@ -59,25 +59,21 @@ assortativity_worldpartition <- assortativity(g, V(g)$world_partition, directed 
 
 in_degree <- degree(g, mode = "in")
 out_degree <- degree(g, mode = "out")
-
 st_in_degree <- degree(g, mode = "in", normalized = TRUE)
 st_out_degree <- degree(g, mode = "out", normalized = TRUE)
 
 closeness_in <- closeness(g, mode = "in") #non torna???
 closeness_out <- closeness(g, mode = "out")
-
 st_closeness_in <- closeness(g, mode = "in", normalized = TRUE)
 st_closeness_out <- closeness(g, mode = "out", normalized = TRUE)
 
 betweenness <- betweenness(g, directed = TRUE)
 st_betweenness <- betweenness(g, directed = TRUE, normalized = TRUE)
-
 eigen_centrality <- eigen_centrality(g)$vector
 st_eigen_centrality <- eigen_centrality(g, scale = TRUE)$vector
 
 in_centr_degree <- centr_degree(g, loops = FALSE, mode = "in")
 out_centr_degree <- centr_degree(g, loops = FALSE, mode = "out")
-
 in_centr_clo <- centr_clo(g, mode = "in")
 out_centr_clo <- centr_clo(g, mode = "out")
 
@@ -104,14 +100,14 @@ hist(closeness_in, breaks = length(unique(closeness_in)))
 closeness_in[order(closeness_in, decreasing = TRUE)]
 summary(st_closeness_in)
 hist(st_closeness_in, breaks = length(unique(st_closeness_in)))
-plot(g, layout = l, rescale = FALSE, vertex.label.cex = st_closeness_in * 5, vertex.size = 0, vertex.label.color = st_closeness_in * 8, edge.color = "lightblue")
+plot(g, layout = l, rescale = FALSE, vertex.label.cex = st_closeness_in * 3, vertex.size = 0, vertex.label.color = st_closeness_in * 8, edge.color = "lightblue")
 
 summary(closeness_out)
 hist(closeness_out, breaks = length(unique(closeness_out)))
 closeness_out[order(closeness_out, decreasing = TRUE)]
 summary(st_closeness_out)
 hist(st_closeness_out, breaks = length(unique(st_closeness_out)))
-plot(g, layout = l, rescale = FALSE, vertex.label.cex = st_closeness_out * 5, vertex.size = 0, vertex.label.color = st_closeness_out * 8, edge.color = "lightblue")
+plot(g, layout = l, rescale = FALSE, vertex.label.cex = st_closeness_out * 2, vertex.size = 0, vertex.label.color = st_closeness_out * 8, edge.color = "lightblue")
 
 summary(betweenness)
 hist(betweenness, breaks = length(unique(betweenness)))
