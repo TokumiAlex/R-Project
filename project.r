@@ -5,7 +5,7 @@ library(ergm)
 library(intergraph)
 library(sbm)
 library(ggplot2)
-
+library(gridExtra)
 
 load("workspace.Rdata")
 ls()
@@ -169,10 +169,17 @@ net %v% "xCoordinate" = attr$xCoordinates
 net %v% "yCoordinate" = attr$yCoordinates
 net %v% "name" = attr$Names
 
+#SRG
+
 mod0 = ergm(net ~ edges,
             control = control.ergm(seed = 1, checkpoint="mod0/step_%03d.RData"))
 summary(mod0)
 
+#NH-SRG
+
+mod1_receiverAndSender = ergm(net ~ edges + receiver + sender,
+                     control = control.ergm(seed = 1))
+summary(mod1_receiverAndSender)
 
 mod1_sender = ergm(net ~ edges + sender,
             control = control.ergm(seed = 1, checkpoint="mod1_sender/step_%03d.RData"))
@@ -182,9 +189,7 @@ mod1_receiver = ergm(net ~ edges + receiver,
             control = control.ergm(seed = 1, checkpoint="mod1_receiver/step_%03d.RData"))
 summary(mod1_receiver)
 
-mod1_mutual = ergm(net ~ edges + mutual,
-              control = control.ergm(seed = 1, checkpoint="mod1_mutual/step_%03d.RData"))
-summary(mod1_mutual)
+#p1 model
 
 mod2 = ergm(net ~ edges + receiver + mutual,
             verbose = 4,
@@ -192,10 +197,14 @@ mod2 = ergm(net ~ edges + receiver + mutual,
 summary(mod2)
 # Non riesco a finalizzare mod2, quindi inutilizzabile per un problema di R (neanche da fisso)
 
-BIC(mod0, mod1_receiver, mod1_mutual)
-AIC(mod0, mod1_receiver, mod1_mutual)
+mod2_mutual = ergm(net ~ edges + mutual,
+              control = control.ergm(seed = 1))
+summary(mod2_mutual)
 
-# mod1_mutual parrebbe essere il modello migliore per ora
+BIC(mod0, mod1_receiver, mod2_mutual)
+AIC(mod0, mod1_receiver, mod2_mutual)
+
+# mod2_mutual parrebbe essere il modello migliore per ora
 
 mod3 = ergm(net ~ edges + mutual +
               nodecov("gdp") + nodecov("xCoordinate") + nodecov("yCoordinate") +
@@ -206,8 +215,8 @@ mod3 = ergm(net ~ edges + mutual +
 summary(mod3)
 mcmc.diagnostics(mod3)
 
-BIC(mod1_mutual, mod3)
-AIC(mod1_mutual, mod3)
+BIC(mod0, mod2_mutual, mod3)
+AIC(mod0, mod2_mutual, mod3)
 
 # mod3 sembra il migliore dei due
 
@@ -267,10 +276,9 @@ mod5_onlyGwid = ergm(net ~ edges + mutual +
               nodematch("continent") + nodematch("partition") +
               gwidegree(decay = 1, fixed = TRUE),
             verbose = 4,
-            control = control.ergm(seed = 1, checkpoint="markov03gw02/step_%03d.RData"))
+            control = control.ergm(seed = 1))
 summary(mod5_onlyGwid)
 mcmc.diagnostics(mod5_onlyGwid)
-
 
 mod5_onlyGwid_2 = ergm(net ~ edges + mutual +
                        nodecov("gdp") + nodecov("xCoordinate") + nodecov("yCoordinate") +
@@ -287,6 +295,8 @@ AIC(mod3, mod5_onlyGwid, mod5_onlyGwid_2)
 BIC(mod3, mod5_onlyGwid, mod5_onlyGwid_2)
 
 # mod5_onlyGwid_2 sembra migliore
+
+#social circuit model
 
 mod6 = ergm(net ~ edges + mutual +
               nodecov("gdp") + nodecov("xCoordinate") + nodecov("yCoordinate") +
@@ -349,17 +359,17 @@ fnc = function(xx){
   return(c(tr, ideg, odeg, dens))
 }
 
-sim = simulate(mod6_gwdsp_2, nsim = 100, verbose = TRUE, seed = 1)
+sim2 = simulate(mod6_gwdsp_2, nsim = 100, verbose = TRUE, seed = 1)
 
 null.distr = matrix(,100,4)
 for(b in 1:100){
-  null.distr[b,]  = fnc(sim[[b]])
+  null.distr[b,]  = fnc(sim2[[b]])
 }
 dev.new()
 par(mfrow = c(4,1))
-hist(unlist(null.distr[,1]), xlab = "transitivity"); abline(v = transitivity(g), col = "red")
+hist(unlist(null.distr[,1]), xlab = "transitivity", xlim=c(0.25, 0.5)); abline(v = transitivity(g), col = "red")
 hist(unlist(null.distr[,2]), xlab = "in-degree"); abline(v = sd(degree(g, mode = "in")), col = "red")
-hist(unlist(null.distr[,3]), xlab = "out-degree"); abline(v = sd(degree(g, mode = "out")), col = "red")
+hist(unlist(null.distr[,3]), xlab = "out-degree", xlim=c(0, 22)); abline(v = sd(degree(g, mode = "out")), col = "red")
 hist(unlist(null.distr[,4]), xlab = "density"); abline(v = edge_density(g), col = "red")
 
 mean(transitivity(g) > null.distr[, 1])
@@ -387,11 +397,11 @@ mean(sd(degree(g, mode = "out")) > null.distr[, 3])
 mean(edge_density(g) > null.distr[, 4])
 
 # simuliamo anche mod0 pe divertimento
-sim = simulate(mod0, nsim = 100, verbose = TRUE, seed = 1)
+sim0 = simulate(mod0, nsim = 100, verbose = TRUE, seed = 1)
 
 null.distr = matrix(,100,4)
 for(b in 1:100){
-  null.distr[b,]  = fnc(sim[[b]])
+  null.distr[b,]  = fnc(sim0[[b]])
 }
 dev.new()
 par(mfrow = c(4,1))
@@ -457,5 +467,5 @@ for (i in 1:7) {
 m
 
 membership_colors = palette.colors(9)[-1]
-plot(g, layout = l, rescale = FALSE, vertex.color = membership_colors[sbm1$memberships])
+plot(g, layout = l, rescale = FALSE, vertex.size=10, vertex.label.font = 2, vertex.color = membership_colors[sbm1$memberships])
 legend("topright", legend = c("1", "2", "3", "4", "5", "6"), fill = membership_colors)
