@@ -4,7 +4,6 @@ library(igraph)
 library(ergm)
 library(intergraph)
 library(sbm)
-library(igraph)
 library(ggplot2)
 
 
@@ -83,7 +82,7 @@ out_degree <- degree(g, mode = "out")
 st_in_degree <- degree(g, mode = "in", normalized = TRUE)
 st_out_degree <- degree(g, mode = "out", normalized = TRUE)
 
-closeness_in <- closeness(g, mode = "in") #non torna???
+closeness_in <- closeness(g, mode = "in")
 closeness_out <- closeness(g, mode = "out")
 st_closeness_in <- closeness(g, mode = "in", normalized = TRUE)
 st_closeness_out <- closeness(g, mode = "out", normalized = TRUE)
@@ -91,7 +90,6 @@ st_closeness_out <- closeness(g, mode = "out", normalized = TRUE)
 betweenness <- betweenness(g, directed = TRUE)
 st_betweenness <- betweenness(g, directed = TRUE, normalized = TRUE)
 eigen_centrality <- eigen_centrality(g)$vector
-st_eigen_centrality <- eigen_centrality(g, scale = TRUE)$vector
 
 in_centr_degree <- centr_degree(g, loops = FALSE, mode = "in")
 out_centr_degree <- centr_degree(g, loops = FALSE, mode = "out")
@@ -105,32 +103,56 @@ palette.colors()
 summary(in_degree)
 in_degree[order(in_degree, decreasing = TRUE)]
 summary(st_in_degree)
-plot(g, layout = l, rescale = FALSE, vertex.label.cex = st_in_degree * 5, vertex.size = 0, vertex.label.color = st_in_degree * 8, edge.color = "lightblue")
+
+top_nodes <- names(sort(st_in_degree, decreasing = TRUE)[1:10])
+label_colors <- rep("black", length(V(g)))
+label_colors[V(g)$name %in% top_nodes] <- "red"
+plot(g, layout = l, rescale = FALSE, vertex.label.cex = st_in_degree * 5, vertex.size = 0, vertex.label.color = label_colors, edge.color = "lightblue")
 
 summary(out_degree)
 out_degree[order(out_degree, decreasing = TRUE)]
 summary(st_out_degree)
-plot(g, layout = l, rescale = FALSE, vertex.label.cex = st_out_degree * 5, vertex.size = 0, vertex.label.color = st_out_degree * 8, edge.color = "lightblue")
+
+top_nodes_out <- names(sort(st_out_degree, decreasing = TRUE)[1:6])
+label_colors_out <- rep("black", length(V(g)))
+label_colors_out[V(g)$name %in% top_nodes_out] <- "red"
+plot(g, layout = l, rescale = FALSE, vertex.label.cex = st_out_degree * 5, vertex.size = 0, vertex.label.color = label_colors_out, edge.color = "lightblue")
 
 summary(closeness_in)
 closeness_in[order(closeness_in, decreasing = TRUE)]
 summary(st_closeness_in)
-plot(g, layout = l, rescale = FALSE, vertex.label.cex = st_closeness_in * 3, vertex.size = 0, vertex.label.color = st_closeness_in * 8, edge.color = "lightblue")
+
+top_nodes <- names(sort(st_closeness_in, decreasing = TRUE)[1:9])
+label_colors <- rep("black", length(V(g)))
+label_colors[V(g)$name %in% top_nodes] <- "red"
+plot(g, layout = l, rescale = FALSE, vertex.label.cex = st_closeness_in * 4, vertex.size = 0, vertex.label.color = label_colors, edge.color = "lightblue")
 
 summary(closeness_out)
 closeness_out[order(closeness_out, decreasing = TRUE)]
 summary(st_closeness_out)
-plot(g, layout = l, rescale = FALSE, vertex.label.cex = st_closeness_out * 2, vertex.size = 0, vertex.label.color = st_closeness_out * 8, edge.color = "lightblue")
+
+top_nodes_out <- names(sort(st_closeness_out, decreasing = TRUE)[1:5])
+label_colors_out <- rep("black", length(V(g)))
+label_colors_out[V(g)$name %in% top_nodes_out] <- "red"
+plot(g, layout = l, rescale = FALSE, vertex.label.cex = st_closeness_out * 3, vertex.size = 0, vertex.label.color = label_colors_out, edge.color = "lightblue")
 
 summary(betweenness)
 betweenness[order(betweenness, decreasing = TRUE)]
 summary(st_betweenness)
-plot(g, layout = l, rescale = FALSE, vertex.label.cex = st_betweenness * 20, vertex.size = 0, vertex.label.color = st_betweenness * 8, edge.color = "lightblue")
+
+top_nodes <- names(sort(st_betweenness, decreasing = TRUE)[1:5])
+label_colors <- rep("black", length(V(g)))
+label_colors[V(g)$name %in% top_nodes] <- "red"
+plot(g, layout = l, rescale = FALSE, vertex.label.cex = st_betweenness * 20, vertex.size = 0, vertex.label.color = label_colors, edge.color = "lightblue")
 
 summary(eigen_centrality)
 eigen_centrality[order(eigen_centrality, decreasing = TRUE)]
-summary(st_eigen_centrality)
-plot(g, layout = l, rescale = FALSE, vertex.label.cex = st_eigen_centrality * 3, vertex.size = 0, vertex.label.color = st_eigen_centrality * 8, edge.color = "lightblue")
+
+top_nodes <- names(sort(eigen_centrality, decreasing = TRUE)[1:5])
+label_colors <- rep("black", length(V(g)))
+label_colors[V(g)$name %in% top_nodes] <- "red"
+plot(g, layout = l, rescale = FALSE, vertex.label.cex = st_eigen_centrality * 3, vertex.size = 0, vertex.label.color = label_colors, edge.color = "lightblue")
+
 
 net = network(Y, directed = T)
 
@@ -168,7 +190,7 @@ mod2 = ergm(net ~ edges + receiver + mutual,
             verbose = 4,
             control = control.ergm(seed = 1, checkpoint="mod2/step_%03d.RData"))
 summary(mod2)
-# Non riesco a finalizzare mod2, quindi inutilizzabile per un problema di R
+# Non riesco a finalizzare mod2, quindi inutilizzabile per un problema di R (neanche da fisso)
 
 BIC(mod0, mod1_receiver, mod1_mutual)
 AIC(mod0, mod1_receiver, mod1_mutual)
@@ -200,7 +222,7 @@ mod4 = ergm(net ~ edges + mutual +
             control = control.ergm(seed = 1, checkpoint="markov01/step_%03d.RData"))
 summary(mod4)
 mcmc.diagnostics(mod4)
-# impossibile da stimare
+# impossibile da stimare (anche da fisso)
 
 mod4_noTriangles = ergm(net ~ edges + mutual +
               nodecov("gdp") + nodecov("xCoordinate") + nodecov("yCoordinate") +
@@ -212,50 +234,66 @@ mod4_noTriangles = ergm(net ~ edges + mutual +
             control = control.ergm(seed = 1, checkpoint="markov02/step_%03d.RData"))
 summary(mod4_noTriangles)
 mcmc.diagnostics(mod4_noTriangles)
-# impossibile da stimare
+# impossibile da stimare (anche da fisso) degenera
 
 mod5 = ergm(net ~ edges + mutual +
               nodecov("gdp") + nodecov("xCoordinate") + nodecov("yCoordinate") +
               nodefactor("continent") + nodefactor("partition") +
               absdiff("gdp") + absdiff("xCoordinate") + absdiff("yCoordinate") +
               nodematch("continent") + nodematch("partition") +
-              triangle + gwidegree(decay = 1, fixed = TRUE),
+              gwidegree(decay = 1, fixed = TRUE) + gwodegree(decay = 1, fixed = TRUE),
             verbose = 4,
             control = control.ergm(seed = 1, checkpoint="markov03/step_%03d.RData"))
 summary(mod5)
 mcmc.diagnostics(mod5)
 # impossibile da stimare
 
-mod5 = ergm(net ~ edges + mutual +
+mod5_onlyGwod = ergm(net ~ edges + mutual +
               nodecov("gdp") + nodecov("xCoordinate") + nodecov("yCoordinate") +
               nodefactor("continent") + nodefactor("partition") +
               absdiff("gdp") + absdiff("xCoordinate") + absdiff("yCoordinate") +
               nodematch("continent") + nodematch("partition") +
-              triangle + gwodegree(decay = 1, fixed = TRUE),
+              gwodegree(decay = 1, fixed = TRUE),
             verbose = 4,
             control = control.ergm(seed = 1, checkpoint="markov03gw01/step_%03d.RData"))
-summary(mod5)
-mcmc.diagnostics(mod5)
+summary(mod5_onlyGwod)
+mcmc.diagnostics(mod5_onlyGwod)
 # impossibile da stimare
 
-mod5 = ergm(net ~ edges + mutual +
+mod5_onlyGwid = ergm(net ~ edges + mutual +
               nodecov("gdp") + nodecov("xCoordinate") + nodecov("yCoordinate") +
               nodefactor("continent") + nodefactor("partition") +
               absdiff("gdp") + absdiff("xCoordinate") + absdiff("yCoordinate") +
               nodematch("continent") + nodematch("partition") +
-              triangle + gwidegree(decay = 1, fixed = TRUE) + gwodegree(decay = 1, fixed = TRUE),
+              gwidegree(decay = 1, fixed = TRUE),
             verbose = 4,
             control = control.ergm(seed = 1, checkpoint="markov03gw02/step_%03d.RData"))
-summary(mod5)
-mcmc.diagnostics(mod5)
-# impossibile da stimare
+summary(mod5_onlyGwid)
+mcmc.diagnostics(mod5_onlyGwid)
 
+
+mod5_onlyGwid_2 = ergm(net ~ edges + mutual +
+                       nodecov("gdp") + nodecov("xCoordinate") + nodecov("yCoordinate") +
+                       nodefactor("continent") + nodefactor("partition") +
+                       absdiff("gdp") + absdiff("xCoordinate") + absdiff("yCoordinate") +
+                       nodematch("continent") +
+                       gwidegree(decay = 1, fixed = TRUE),
+                     verbose = 4,
+                     control = control.ergm(seed = 1, checkpoint="markov03gw03/step_%03d.RData"))
+summary(mod5_onlyGwid_2)
+mcmc.diagnostics(mod5_onlyGwid_2)
+
+AIC(mod3, mod5_onlyGwid, mod5_onlyGwid_2)
+BIC(mod3, mod5_onlyGwid, mod5_onlyGwid_2)
+
+# mod5_onlyGwid_2 sembra migliore
 
 mod6 = ergm(net ~ edges + mutual +
               nodecov("gdp") + nodecov("xCoordinate") + nodecov("yCoordinate") +
               nodefactor("continent") + nodefactor("partition") +
               absdiff("gdp") + absdiff("xCoordinate") + absdiff("yCoordinate") +
               nodematch("continent") + nodematch("partition") +
+              gwidegree(decay = 1, fixed = TRUE) +
               gwesp(decay = 1, fixed = T) + gwdsp(decay = 1, fixed = T),
             verbose = 4,
             control = control.ergm(seed = 1, checkpoint="mod6/step_%03d.RData"))
@@ -270,11 +308,9 @@ mod6_gwdsp = ergm(net ~ edges + mutual +
               nodematch("continent") + nodematch("partition") +
               gwdsp(decay = 1, fixed = T),
             verbose = 4,
-            control = control.ergm(seed = 1, checkpoint="mod6_u/step_%03d.RData"))
+            control = control.ergm(seed = 1, checkpoint="mod6_gwdsp/step_%03d.RData"))
 summary(mod6_gwdsp)
 mcmc.diagnostics(mod6_gwdsp)
-
-# Devo provare mod6 solo con gwesp pe capire
 
 mod6_gwesp = ergm(net ~ edges + mutual +
                 nodecov("gdp") + nodecov("xCoordinate") + nodecov("yCoordinate") +
@@ -283,34 +319,91 @@ mod6_gwesp = ergm(net ~ edges + mutual +
                 nodematch("continent") + nodematch("partition") +
                 gwesp(decay = 1, fixed = T),
               verbose = 4,
-              control = control.ergm(seed = 1, checkpoint="mod6_gwesp/step_%03d.RData"))
+              control = control.ergm(seed = 1, checkpoint="mod6_gwesp/step_%03d.RData", resume = "mod6_gwesp/step_026.RData"))
 summary(mod6_gwesp)
 mcmc.diagnostics(mod6_gwesp)
+# impossibile da stimare
 
+mod6_gwdsp_2 = ergm(net ~ mutual +
+                      nodecov("gdp") + nodecov("xCoordinate") + nodecov("yCoordinate") +
+                      nodefactor("continent") + nodefactor("partition") +
+                      absdiff("gdp") + absdiff("xCoordinate") + absdiff("yCoordinate") +
+                      nodematch("continent") + nodematch("partition") +
+                      gwdsp(decay = 1, fixed = T),
+                    verbose = 4,
+                    control = control.ergm(seed = 1, checkpoint="mod6_gwdsp_2/step_%03d.RData"))
+summary(mod6_gwdsp_2)
+mcmc.diagnostics(mod6_gwdsp_2)
 
-sim = simulate(mod6_u, nsim = 100, verbose = TRUE, seed = 1)
+AIC(mod5_onlyGwid_2, mod6_gwdsp, mod6_gwdsp_2)
+BIC(mod5_onlyGwid_2, mod6_gwdsp, mod6_gwdsp_2)
+
+# mod6_gwdsp_2 sembra essere il migliore anche se di veramente poco
 
 fnc = function(xx){
   ig = asIgraph(xx)
   tr = transitivity(ig)
   ideg = sd(degree(ig, mode = "in"))
   odeg = sd(degree(ig, mode = "out"))
-  return(c(tr, ideg, odeg))
+  dens = edge_density(ig)
+  return(c(tr, ideg, odeg, dens))
 }
 
-null.distr = matrix(,100,3)
+sim = simulate(mod6_gwdsp_2, nsim = 100, verbose = TRUE, seed = 1)
+
+null.distr = matrix(,100,4)
 for(b in 1:100){
   null.distr[b,]  = fnc(sim[[b]])
 }
 dev.new()
-par(mfrow = c(3,1))
+par(mfrow = c(4,1))
 hist(unlist(null.distr[,1]), xlab = "transitivity"); abline(v = transitivity(g), col = "red")
 hist(unlist(null.distr[,2]), xlab = "in-degree"); abline(v = sd(degree(g, mode = "in")), col = "red")
 hist(unlist(null.distr[,3]), xlab = "out-degree"); abline(v = sd(degree(g, mode = "out")), col = "red")
+hist(unlist(null.distr[,4]), xlab = "density"); abline(v = edge_density(g), col = "red")
 
 mean(transitivity(g) > null.distr[, 1])
 mean(sd(degree(g, mode = "in")) > null.distr[, 2])
 mean(sd(degree(g, mode = "out")) > null.distr[, 3])
+mean(edge_density(g) > null.distr[, 4])
+
+# simuliamo anche mod6_gwdsp per capire quali sono le differenze tra mod6_gwdsp e mod6_gwdsp_2
+sim = simulate(mod6_gwdsp, nsim = 100, verbose = TRUE, seed = 1)
+
+null.distr = matrix(,100,4)
+for(b in 1:100){
+  null.distr[b,]  = fnc(sim[[b]])
+}
+dev.new()
+par(mfrow = c(4,1))
+hist(unlist(null.distr[,1]), xlab = "transitivity"); abline(v = transitivity(g), col = "red")
+hist(unlist(null.distr[,2]), xlab = "in-degree", ); abline(v = sd(degree(g, mode = "in")), col = "red")
+hist(unlist(null.distr[,3]), xlab = "out-degree"); abline(v = sd(degree(g, mode = "out")), col = "red")
+hist(unlist(null.distr[,4]), xlab = "density"); abline(v = edge_density(g), col = "red")
+
+mean(transitivity(g) > null.distr[, 1])
+mean(sd(degree(g, mode = "in")) > null.distr[, 2])
+mean(sd(degree(g, mode = "out")) > null.distr[, 3])
+mean(edge_density(g) > null.distr[, 4])
+
+# simuliamo anche mod0 pe divertimento
+sim = simulate(mod0, nsim = 100, verbose = TRUE, seed = 1)
+
+null.distr = matrix(,100,4)
+for(b in 1:100){
+  null.distr[b,]  = fnc(sim[[b]])
+}
+dev.new()
+par(mfrow = c(4,1))
+hist(unlist(null.distr[,1]), xlab = "transitivity"); abline(v = transitivity(g), col = "red")
+hist(unlist(null.distr[,2]), xlab = "in-degree", ); abline(v = sd(degree(g, mode = "in")), col = "red")
+hist(unlist(null.distr[,3]), xlab = "out-degree"); abline(v = sd(degree(g, mode = "out")), col = "red")
+hist(unlist(null.distr[,4]), xlab = "density"); abline(v = edge_density(g), col = "red")
+
+mean(transitivity(g) > null.distr[, 1])
+mean(sd(degree(g, mode = "in")) > null.distr[, 2])
+mean(sd(degree(g, mode = "out")) > null.distr[, 3])
+mean(edge_density(g) > null.distr[, 4])
 
 # SBM
 plotMyMatrix(as.matrix(Y), dimLabels = list(row = 'nations', col = 'nations'))
@@ -342,4 +435,27 @@ sbm1$storedModels
 
 sbm1$memberships
 
-plot(g, vertex.color = sbm1$memberships)
+prMaxes = c(80)
+for (i in 1:80) {
+  prMaxes[i] <- max(sbm1$probMemberships[i,])
+}
+order(prMaxes, decreasing = FALSE)
+prMaxes[order(prMaxes, decreasing = FALSE)]
+
+# Prendiamo solo quelli sotto il 0.95
+ordSBM1 = order(prMaxes, decreasing = FALSE)[1:7]
+prMaxes[ordSBM1]
+m = matrix(, nrow = 7, ncol = 6, dimnames = list(V(g)$name[ordSBM1], c("1", "2", "3", "4", "5", "6")))
+for (i in 1:7) {
+  m[i,1] = sbm1$probMemberships[ordSBM1[i], 1]
+  m[i,2] = sbm1$probMemberships[ordSBM1[i], 2]
+  m[i,3] = sbm1$probMemberships[ordSBM1[i], 3]
+  m[i,4] = sbm1$probMemberships[ordSBM1[i], 4]
+  m[i,5] = sbm1$probMemberships[ordSBM1[i], 5]
+  m[i,6] = sbm1$probMemberships[ordSBM1[i], 6]
+}
+m
+
+membership_colors = palette.colors(9)[-1]
+plot(g, layout = l, rescale = FALSE, vertex.color = membership_colors[sbm1$memberships])
+legend("topright", legend = c("1", "2", "3", "4", "5", "6"), fill = membership_colors)
