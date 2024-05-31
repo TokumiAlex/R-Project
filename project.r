@@ -26,19 +26,23 @@ V(g)$yCoordinate = attr$yCoordinates
 V(g)$name = attr$Names
 
 x11(width=100, height = 50)
-# Modifica manualmente le posizioni dei nodi
+# Imposta i nodi in base alla loro posizione geografica
 l = matrix(, nrow=length(V(g)), ncol=2)
 for (i in 1:length(V(g))) {
-  l[i, 1] <- V(g)[i]$xCoordinate* 4 - 2
-  l[i, 2] <- 2.25 - V(g)[i]$yCoordinate * 4
+	l[i, 1] <- V(g)[i]$xCoordinate* 4 - 2
+	l[i, 2] <- 2.25 - V(g)[i]$yCoordinate * 4
 }
+
+#mostra il grafo per continenti
 continent_colors <- palette.colors(9)[-1]
 plot(g, layout = l, rescale=FALSE, vertex.shape = "rectangle", vertex.size=19, vertex.size2= 3, vertex.label.font = 2, vertex.color = continent_colors[V(g)$continent])
 continent_names <- c("Africa", "Asia", "Europe", "North America", "Oceania", "South America")
 legend("topright", legend = continent_names, fill = continent_colors, cex = 2)
 
+#mostra il grafo per GDP
 plot(g, layout = l, rescale=FALSE, vertex.size=V(g)$gdp/2000, vertex.label.font = 2)
 
+#mostra il grafo per world partition
 world_partition_colors <- palette.colors(9)[-1]
 plot(g, layout = l, rescale=FALSE, vertex.label.font = 2, vertex.color = world_partition_colors[V(g)$world_partition], vertex.size=10)
 world_partition_names <- c("Core", "Semiperiphery", "Periphery")
@@ -66,14 +70,13 @@ assortativity_worldpartition <- assortativity(g, V(g)$world_partition, directed 
 
 # Create a table with names and values
 table <- data.frame(
-  Names = c("Edge Density", "Reciprocity", "Transitivity", "Odd-Ratio of Edge Density", "Odd-Ratio of Transitivity", "Tau", "Assortativity (Continent)", "Assortativity (GDP)", "Assortativity (World Partition)"),
-  Values = c(rho, reciprocity, transitivity, odd_rho, odd_transitivity, tau, assortativity_continent, assortativity_gdp, assortativity_worldpartition)
+	Names = c("Edge Density", "Reciprocity", "Transitivity", "Odd-Ratio of Edge Density", "Odd-Ratio of Transitivity", "Tau", "Assortativity (Continent)", "Assortativity (GDP)", "Assortativity (World Partition)"),
+	Values = c(rho, reciprocity, transitivity, odd_rho, odd_transitivity, tau, assortativity_continent, assortativity_gdp, assortativity_worldpartition)
 )
 # Save the table as an image
 png("table.png", width = 800*3, height = 400*3, res=72*3)
 grid.table(table)
 dev.off()
-
 
 #Nodal Stats
 
@@ -172,198 +175,146 @@ net %v% "name" = attr$Names
 #SRG
 
 mod0 = ergm(net ~ edges,
-            control = control.ergm(seed = 1, checkpoint="mod0/step_%03d.RData"))
+						control = control.ergm(seed = 1))
 summary(mod0)
 
 #NH-SRG
 
-mod1_receiverAndSender = ergm(net ~ edges + receiver + sender,
-                     control = control.ergm(seed = 1))
-summary(mod1_receiverAndSender)
+mod1 = ergm(net ~ edges + receiver + sender,
+										 control = control.ergm(seed = 1))
+summary(mod1)
 
-mod1_sender = ergm(net ~ edges + sender,
-            control = control.ergm(seed = 1, checkpoint="mod1_sender/step_%03d.RData"))
-summary(mod1_sender)
-
-mod1_receiver = ergm(net ~ edges + receiver,
-            control = control.ergm(seed = 1, checkpoint="mod1_receiver/step_%03d.RData"))
-summary(mod1_receiver)
+mod1_onlyReceiver = ergm(net ~ edges + receiver,
+						control = control.ergm(seed = 1))
+summary(mod1_onlyReceiver)
 
 #p1 model
 
 mod2 = ergm(net ~ edges + receiver + mutual,
-            verbose = 4,
-            control = control.ergm(seed = 1, checkpoint="mod2/step_%03d.RData"))
+						control = control.ergm(seed = 1))
 summary(mod2)
-# Non riesco a finalizzare mod2, quindi inutilizzabile per un problema di R (neanche da fisso)
+#could not be estimated
 
-mod2_mutual = ergm(net ~ edges + mutual,
-              control = control.ergm(seed = 1))
-summary(mod2_mutual)
+mod2_onlyMutual = ergm(net ~ edges + mutual,
+							control = control.ergm(seed = 1))
+summary(mod2_onlyMutual)
 
-BIC(mod0, mod1_receiver, mod2_mutual)
-AIC(mod0, mod1_receiver, mod2_mutual)
-
-# mod2_mutual parrebbe essere il modello migliore per ora
-
-mod3 = ergm(net ~ edges + mutual +
-              nodecov("gdp") + nodecov("xCoordinate") + nodecov("yCoordinate") +
-              nodefactor("continent") + nodefactor("partition") +
-              absdiff("gdp") + absdiff("xCoordinate") + absdiff("yCoordinate") +
-              nodematch("continent") + nodematch("partition"),
-            control = control.ergm(seed = 1, checkpoint="attr_model/step_%03d.RData"))
-summary(mod3)
-mcmc.diagnostics(mod3)
-
-BIC(mod0, mod2_mutual, mod3)
-AIC(mod0, mod2_mutual, mod3)
-
-# mod3 sembra il migliore dei due
+mod2_allAttributes = ergm(net ~ edges + mutual +
+							nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
+							absdiff("gdp") + nodematch("continent") + nodematch("partition"),
+						control = control.ergm(seed = 1))
+summary(mod2_allAttributes)
 
 #Markov
+mod3 = ergm(net ~ edges + mutual +
+							nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
+							absdiff("gdp") + nodematch("continent") + nodematch("partition") +
+							+ istar(2) + ostar(2) + triangle,
+						control = control.ergm(seed = 1))
+summary(mod3)
+#could not be estimated
+
+mod3_noTriangles = ergm(net ~ edges + mutual +
+							nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
+							absdiff("gdp") + nodematch("continent") + nodematch("partition") +
+							+ istar(2) + ostar(2),
+						control = control.ergm(seed = 1))
+summary(mod3_noTriangles)
+#could not be estimated
+
+mod3_onlyTriangles = ergm(net ~ edges + mutual +
+							nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
+							absdiff("gdp") + nodematch("continent") + nodematch("partition") +
+							+ triangle,
+						control = control.ergm(seed = 1))
+summary(mod3_onlyTriangles)
+#could not be estimated
+
 mod4 = ergm(net ~ edges + mutual +
-              nodecov("gdp") + nodecov("xCoordinate") + nodecov("yCoordinate") +
-              nodefactor("continent") + nodefactor("partition") +
-              absdiff("gdp") + absdiff("xCoordinate") + absdiff("yCoordinate") +
-              nodematch("continent") + nodematch("partition") +
-              + istar(2) + ostar(2) + triangle,
-            verbose = 4,
-            control = control.ergm(seed = 1, checkpoint="markov01/step_%03d.RData"))
+							nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
+							absdiff("gdp") + nodematch("continent") + nodematch("partition") +
+							+ gwidegree(decay = 1, fixed = TRUE) + gwodegree(decay = 1, fixed = TRUE),
+						control = control.ergm(seed = 1))
 summary(mod4)
-mcmc.diagnostics(mod4)
-# impossibile da stimare (anche da fisso)
+#could not be estimated
 
-mod4_noTriangles = ergm(net ~ edges + mutual +
-              nodecov("gdp") + nodecov("xCoordinate") + nodecov("yCoordinate") +
-              nodefactor("continent") + nodefactor("partition") +
-              absdiff("gdp") + absdiff("xCoordinate") + absdiff("yCoordinate") +
-              nodematch("continent") + nodematch("partition") +
-              + istar(2) + ostar(2),
-            verbose = 4,
-            control = control.ergm(seed = 1, checkpoint="markov02/step_%03d.RData"))
-summary(mod4_noTriangles)
-mcmc.diagnostics(mod4_noTriangles)
-# impossibile da stimare (anche da fisso) degenera
+mod4_onlyGwod = ergm(net ~ edges + mutual +
+							nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
+							absdiff("gdp") + nodematch("continent") + nodematch("partition") +
+							+ gwodegree(decay = 1, fixed = TRUE),
+						control = control.ergm(seed = 1))
+summary(mod4_onlyGwod)
+#could not be estimated
 
-mod5 = ergm(net ~ edges + mutual +
-              nodecov("gdp") + nodecov("xCoordinate") + nodecov("yCoordinate") +
-              nodefactor("continent") + nodefactor("partition") +
-              absdiff("gdp") + absdiff("xCoordinate") + absdiff("yCoordinate") +
-              nodematch("continent") + nodematch("partition") +
-              gwidegree(decay = 1, fixed = TRUE) + gwodegree(decay = 1, fixed = TRUE),
-            verbose = 4,
-            control = control.ergm(seed = 1, checkpoint="markov03/step_%03d.RData"))
-summary(mod5)
-mcmc.diagnostics(mod5)
-# impossibile da stimare
+mod4_onlyGwid = ergm(net ~ edges + mutual +
+							nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
+							absdiff("gdp") + nodematch("continent") + nodematch("partition") +
+							+ gwidegree(decay = 1, fixed = TRUE),
+						control = control.ergm(seed = 1))
+summary(mod4_onlyGwid)
 
-mod5_onlyGwod = ergm(net ~ edges + mutual +
-              nodecov("gdp") + nodecov("xCoordinate") + nodecov("yCoordinate") +
-              nodefactor("continent") + nodefactor("partition") +
-              absdiff("gdp") + absdiff("xCoordinate") + absdiff("yCoordinate") +
-              nodematch("continent") + nodematch("partition") +
-              gwodegree(decay = 1, fixed = TRUE),
-            verbose = 4,
-            control = control.ergm(seed = 1, checkpoint="markov03gw01/step_%03d.RData"))
-summary(mod5_onlyGwod)
-mcmc.diagnostics(mod5_onlyGwod)
-# impossibile da stimare
-
-mod5_onlyGwid = ergm(net ~ edges + mutual +
-              nodecov("gdp") + nodecov("xCoordinate") + nodecov("yCoordinate") +
-              nodefactor("continent") + nodefactor("partition") +
-              absdiff("gdp") + absdiff("xCoordinate") + absdiff("yCoordinate") +
-              nodematch("continent") + nodematch("partition") +
-              gwidegree(decay = 1, fixed = TRUE),
-            verbose = 4,
-            control = control.ergm(seed = 1))
-summary(mod5_onlyGwid)
-mcmc.diagnostics(mod5_onlyGwid)
-
-mod5_onlyGwid_2 = ergm(net ~ edges + mutual +
-                       nodecov("gdp") + nodecov("xCoordinate") + nodecov("yCoordinate") +
-                       nodefactor("continent") + nodefactor("partition") +
-                       absdiff("gdp") + absdiff("xCoordinate") + absdiff("yCoordinate") +
-                       nodematch("continent") +
-                       gwidegree(decay = 1, fixed = TRUE),
-                     verbose = 4,
-                     control = control.ergm(seed = 1, checkpoint="markov03gw03/step_%03d.RData"))
-summary(mod5_onlyGwid_2)
-mcmc.diagnostics(mod5_onlyGwid_2)
-
-AIC(mod3, mod5_onlyGwid, mod5_onlyGwid_2)
-BIC(mod3, mod5_onlyGwid, mod5_onlyGwid_2)
-
-# mod5_onlyGwid_2 sembra migliore
+mod4_onlyGwid_2 = ergm(net ~ edges + mutual +
+							nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
+							absdiff("gdp") + nodematch("continent") +
+							gwidegree(decay = 1, fixed = TRUE),
+						control = control.ergm(seed = 1))
+summary(mod4_onlyGwid_2)
 
 #social circuit model
 
-mod6 = ergm(net ~ edges + mutual +
-              nodecov("gdp") + nodecov("xCoordinate") + nodecov("yCoordinate") +
-              nodefactor("continent") + nodefactor("partition") +
-              absdiff("gdp") + absdiff("xCoordinate") + absdiff("yCoordinate") +
-              nodematch("continent") + nodematch("partition") +
-              gwidegree(decay = 1, fixed = TRUE) +
-              gwesp(decay = 1, fixed = T) + gwdsp(decay = 1, fixed = T),
-            verbose = 4,
-            control = control.ergm(seed = 1, checkpoint="mod6/step_%03d.RData"))
-summary(mod6)
-mcmc.diagnostics(mod6)
-# impossibile da stimare
+mod5 = ergm(net ~ edges + mutual +
+							nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
+							absdiff("gdp") + nodematch("continent") + nodematch("partition") +
+							gwidegree(decay = 1, fixed = TRUE) +
+							gwesp(decay = 1, fixed = T) + gwdsp(decay = 1, fixed = T),
+						verbose = 4,
+						control = control.ergm(seed = 1))
+summary(mod5)
 
-mod6_gwdsp = ergm(net ~ edges + mutual +
-              nodecov("gdp") + nodecov("xCoordinate") + nodecov("yCoordinate") +
-              nodefactor("continent") + nodefactor("partition") +
-              absdiff("gdp") + absdiff("xCoordinate") + absdiff("yCoordinate") +
-              nodematch("continent") + nodematch("partition") +
-              gwdsp(decay = 1, fixed = T),
-            verbose = 4,
-            control = control.ergm(seed = 1, checkpoint="mod6_gwdsp/step_%03d.RData"))
-summary(mod6_gwdsp)
-mcmc.diagnostics(mod6_gwdsp)
+mod5_gwdsp = ergm(net ~ edges + mutual +
+							nodecov("gdp") + nodecov("xCoordinate") + nodecov("yCoordinate") +
+							nodefactor("continent") + nodefactor("partition") +
+							absdiff("gdp") +
+							nodematch("continent") + nodematch("partition") +
+							gwdsp(decay = 1, fixed = T),
+						verbose = 4,
+						control = control.ergm(seed = 1))
+summary(mod5_gwdsp)
 
-mod6_gwesp = ergm(net ~ edges + mutual +
-                nodecov("gdp") + nodecov("xCoordinate") + nodecov("yCoordinate") +
-                nodefactor("continent") + nodefactor("partition") +
-                absdiff("gdp") + absdiff("xCoordinate") + absdiff("yCoordinate") +
-                nodematch("continent") + nodematch("partition") +
-                gwesp(decay = 1, fixed = T),
-              verbose = 4,
-              control = control.ergm(seed = 1, checkpoint="mod6_gwesp/step_%03d.RData", resume = "mod6_gwesp/step_026.RData"))
-summary(mod6_gwesp)
-mcmc.diagnostics(mod6_gwesp)
-# impossibile da stimare
+mod5_gwesp = ergm(net ~ edges + mutual +
+								nodecov("gdp") + nodecov("xCoordinate") + nodecov("yCoordinate") +
+								nodefactor("continent") + nodefactor("partition") +
+								absdiff("gdp") +
+								nodematch("continent") + nodematch("partition") +
+								gwesp(decay = 1, fixed = T),
+							verbose = 4,
+							control = control.ergm(seed = 1))
+summary(mod5_gwesp)
 
-mod6_gwdsp_2 = ergm(net ~ mutual +
-                      nodecov("gdp") + nodecov("xCoordinate") + nodecov("yCoordinate") +
-                      nodefactor("continent") + nodefactor("partition") +
-                      absdiff("gdp") + absdiff("xCoordinate") + absdiff("yCoordinate") +
-                      nodematch("continent") + nodematch("partition") +
-                      gwdsp(decay = 1, fixed = T),
-                    verbose = 4,
-                    control = control.ergm(seed = 1, checkpoint="mod6_gwdsp_2/step_%03d.RData"))
-summary(mod6_gwdsp_2)
-mcmc.diagnostics(mod6_gwdsp_2)
-
-AIC(mod5_onlyGwid_2, mod6_gwdsp, mod6_gwdsp_2)
-BIC(mod5_onlyGwid_2, mod6_gwdsp, mod6_gwdsp_2)
-
-# mod6_gwdsp_2 sembra essere il migliore anche se di veramente poco
+mod5_gwdsp_2 = ergm(net ~ mutual +
+											nodecov("gdp") + nodecov("xCoordinate") + nodecov("yCoordinate") +
+											nodefactor("continent") + nodefactor("partition") +
+											absdiff("gdp") +
+											nodematch("continent") + nodematch("partition") +
+											gwdsp(decay = 1, fixed = T),
+										verbose = 4,
+										control = control.ergm(seed = 1))
+summary(mod5_gwdsp_2)
 
 fnc = function(xx){
-  ig = asIgraph(xx)
-  tr = transitivity(ig)
-  ideg = sd(degree(ig, mode = "in"))
-  odeg = sd(degree(ig, mode = "out"))
-  dens = edge_density(ig)
-  return(c(tr, ideg, odeg, dens))
+	ig = asIgraph(xx)
+	tr = transitivity(ig)
+	ideg = sd(degree(ig, mode = "in"))
+	odeg = sd(degree(ig, mode = "out"))
+	dens = edge_density(ig)
+	return(c(tr, ideg, odeg, dens))
 }
 
 sim2 = simulate(mod6_gwdsp_2, nsim = 100, verbose = TRUE, seed = 1)
 
 null.distr = matrix(,100,4)
 for(b in 1:100){
-  null.distr[b,]  = fnc(sim2[[b]])
+	null.distr[b,] = fnc(sim2[[b]])
 }
 dev.new()
 par(mfrow = c(4,1))
@@ -382,7 +333,7 @@ sim = simulate(mod6_gwdsp, nsim = 100, verbose = TRUE, seed = 1)
 
 null.distr = matrix(,100,4)
 for(b in 1:100){
-  null.distr[b,]  = fnc(sim[[b]])
+	null.distr[b,] = fnc(sim[[b]])
 }
 dev.new()
 par(mfrow = c(4,1))
@@ -401,7 +352,7 @@ sim0 = simulate(mod0, nsim = 100, verbose = TRUE, seed = 1)
 
 null.distr = matrix(,100,4)
 for(b in 1:100){
-  null.distr[b,]  = fnc(sim0[[b]])
+	null.distr[b,] = fnc(sim0[[b]])
 }
 dev.new()
 par(mfrow = c(4,1))
@@ -419,7 +370,7 @@ mean(edge_density(g) > null.distr[, 4])
 plotMyMatrix(as.matrix(Y), dimLabels = list(row = 'nations', col = 'nations'))
 
 sbm1 = estimateSimpleSBM(as.matrix(Y), "bernoulli", dimLabels = 'nations',
-                         estimOptions = list(verbosity = 1))
+												 estimOptions = list(verbosity = 1))
 
 # let us look at the results
 sbm1
@@ -447,7 +398,7 @@ sbm1$memberships
 
 prMaxes = c(80)
 for (i in 1:80) {
-  prMaxes[i] <- max(sbm1$probMemberships[i,])
+	prMaxes[i] <- max(sbm1$probMemberships[i,])
 }
 order(prMaxes, decreasing = FALSE)
 prMaxes[order(prMaxes, decreasing = FALSE)]
@@ -457,12 +408,12 @@ ordSBM1 = order(prMaxes, decreasing = FALSE)[1:7]
 prMaxes[ordSBM1]
 m = matrix(, nrow = 7, ncol = 6, dimnames = list(V(g)$name[ordSBM1], c("1", "2", "3", "4", "5", "6")))
 for (i in 1:7) {
-  m[i,1] = sbm1$probMemberships[ordSBM1[i], 1]
-  m[i,2] = sbm1$probMemberships[ordSBM1[i], 2]
-  m[i,3] = sbm1$probMemberships[ordSBM1[i], 3]
-  m[i,4] = sbm1$probMemberships[ordSBM1[i], 4]
-  m[i,5] = sbm1$probMemberships[ordSBM1[i], 5]
-  m[i,6] = sbm1$probMemberships[ordSBM1[i], 6]
+	m[i,1] = sbm1$probMemberships[ordSBM1[i], 1]
+	m[i,2] = sbm1$probMemberships[ordSBM1[i], 2]
+	m[i,3] = sbm1$probMemberships[ordSBM1[i], 3]
+	m[i,4] = sbm1$probMemberships[ordSBM1[i], 4]
+	m[i,5] = sbm1$probMemberships[ordSBM1[i], 5]
+	m[i,6] = sbm1$probMemberships[ordSBM1[i], 6]
 }
 m
 
