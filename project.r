@@ -164,6 +164,16 @@ library(sbm)
 library(ggplot2)
 library(gridExtra)
 
+install.packages("igraph")
+install.packages("ergm")
+install.packages("intergraph")
+install.packages("sbm")
+install.packages("ggplot2")
+install.packages("gridExtra")
+install.packages("language server")
+install.packages('languageserver', repos='https://p3m.dev/cran/__linux__/jammy/latest')
+
+
 load("workspace.Rdata")
 
 net = network(Y, directed = T)
@@ -233,9 +243,10 @@ mod3 = ergm(net ~ edges + mutual +
 							nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
 							absdiff("gdp") + nodematch("continent") + nodematch("partition") +
 							+ istar(2) + ostar(2) + triangle,
-						control = control.ergm(seed = 1))
+							verbose = 2,
+						control = control.ergm(seed = 2))
 summary(mod3)
-#could not be estimated (neanche dal mio fisso)
+# Degeneracy
 
 mod3_noTriangles = ergm(net ~ edges + mutual +
 							nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
@@ -243,7 +254,7 @@ mod3_noTriangles = ergm(net ~ edges + mutual +
 							+ istar(2) + ostar(2),
 						control = control.ergm(seed = 1))
 summary(mod3_noTriangles)
-#could not be estimated (neanche dal mio fisso)
+# Degeneracy
 
 mod3_onlyIStar2 = ergm(net ~ edges + mutual +
                           nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
@@ -265,16 +276,16 @@ mod3_onlyOStar2 = ergm(net ~ edges + mutual +
                           nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
                           absdiff("gdp") + nodematch("continent") + nodematch("partition") +
                           ostar(2),
-                        verbose = 3,
+                        verbose = 2,
                         control = control.ergm(seed = 1))
 summary(mod3_onlyOStar2)
-#could not be estimated (neanche dal fisso, riprovare lasciandolo per più tempo)
+# Degeneracy
 
 mod3_onlyTriangles = ergm(net ~ edges + mutual +
                           nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
                           absdiff("gdp") + nodematch("continent") + nodematch("partition") +
                           triangle,
-                        verbose = 3,
+                        verbose = 2,
                         control = control.ergm(seed = 1))
 summary(mod3_onlyTriangles)
 #could not be estimated (neanche dal fisso, riprovare lasciandolo per più tempo)
@@ -286,11 +297,11 @@ summary(mod3_onlyTriangles)
 mod4 = ergm(net ~ edges + mutual +
               nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
               absdiff("gdp") + nodematch("continent") + nodematch("partition") +
-              gwidegree(decay = 1, fixed = TRUE) + gwodegree(decay = 1, fixed = TRUE),
-            verbose = 3,
-            control = control.ergm(seed = 1, checkpoint = "mod4/step_%03d.RData", resume = "mod4/step_005_OLD.RData"))
+              triangle + gwidegree(decay = 1, fixed = TRUE) + gwodegree(decay = 1, fixed = TRUE),
+            verbose = 2,
+            control = control.ergm(seed = 1, checkpoint = "mod4/step_%03d.RData"))
 summary(mod4)
-# Ultimo fatto, da rifare (parrebbe degeneracy)
+# Degeneracy
 
 mod4_onlyGwod = ergm(net ~ edges + mutual +
 							nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
@@ -324,87 +335,49 @@ mod4_onlyGwid_noPartitionHomophily = ergm(net ~ edges + mutual +
 						control = control.ergm(seed = 1))
 summary(mod4_onlyGwid_noPartitionHomophily)
 
+mod4_noTriangle = ergm(net ~ edges + mutual +
+							nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
+							absdiff("gdp") + nodematch("continent") + nodematch("partition") +
+							gwidegree(decay = 1, fixed = TRUE) + gwodegree(decay = 1, fixed = TRUE),
+							verbose = 2,
+						control = control.ergm(seed = 1, checkpoint = "mod4_noTriangle/step_%03d.RData"))
+# Degeneracy
+
 AIC(mod4_onlyGwod, mod4_onlyGwod_noPartitionHomophily_noGDPMain, mod4_onlyGwid, mod4_onlyGwid_noPartitionHomophily)
 BIC(mod4_onlyGwod, mod4_onlyGwod_noPartitionHomophily_noGDPMain, mod4_onlyGwid, mod4_onlyGwid_noPartitionHomophily)
 
 mcmc.diagnostics(mod4_onlyGwod)
 mcmc.diagnostics(mod4_onlyGwod_noPartitionHomophily_noGDPMain)
 
+
 # Qua dovresti stampare dei grafi con hist per mettere a confronto i due modelli, da adesso ASSUMERÒ che il modello migliore sia il primo.
 
-mod4_Gwod_withTriangle_With2Star = ergm(net ~ edges + mutual +
-                       nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
-                       absdiff("gdp") + nodematch("continent") + nodematch("partition") +
-                       triangle + istar(2) + ostar(2) +
-                       gwodegree(decay = 1, fixed = TRUE),
-                     control = control.ergm(seed = 1))
-# riprovare per più tempo 
-
-mod4_Gwod_With2Star = ergm(net ~ edges + mutual +
-                        nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
-                        absdiff("gdp") + nodematch("continent") + nodematch("partition") +
-                        istar(2) + ostar(2) +
-                        gwodegree(decay = 1, fixed = TRUE),
-                      control = control.ergm(seed = 1))
-# riprovare per più tempo 
-
-mod4_Gwod_With2IStar = ergm(net ~ edges + mutual +
-                             nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
-                             absdiff("gdp") + nodematch("continent") + nodematch("partition") +
-                             istar(2) +
-                             gwodegree(decay = 1, fixed = TRUE),
-                           control = control.ergm(seed = 1))
-# Degeneracy assicurata
-
-
-mod4_Gwod_With2OStar = ergm(net ~ edges + mutual +
-                              nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
-                              absdiff("gdp") + nodematch("continent") + nodematch("partition") +
-                              ostar(2) +
-                              gwodegree(decay = 1, fixed = TRUE),
-                            control = control.ergm(seed = 1))
-# Degeneracy assicurata
-
 #social circuit model
-
 mod5 = ergm(net ~ edges + mutual +
-							nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
-							absdiff("gdp") + nodematch("continent") + nodematch("partition") +
-							gwidegree(decay = 1, fixed = TRUE) +
-							gwesp(decay = 1, fixed = T) + gwdsp(decay = 1, fixed = T),
-						verbose = 4,
-						control = control.ergm(seed = 1))
+					nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
+					absdiff("gdp") + nodematch("continent") + nodematch("partition") +
+					gwesp(decay = 1, fixed = T) + gwdsp(decay = 1, fixed = T),
+				verbose = 2,
+				control = control.ergm(seed = 1, checkpoint = "mod5/step_%03d.RData"))
 summary(mod5)
 
 mod5_gwdsp = ergm(net ~ edges + mutual +
-							nodecov("gdp") + nodecov("xCoordinate") + nodecov("yCoordinate") +
-							nodefactor("continent") + nodefactor("partition") +
-							absdiff("gdp") +
-							nodematch("continent") + nodematch("partition") +
+							nodecov("gdp")+ nodefactor("continent") + nodefactor("partition") +
+							absdiff("gdp") + nodematch("continent") + nodematch("partition") +
 							gwdsp(decay = 1, fixed = T),
-						verbose = 4,
+						verbose = 2,
 						control = control.ergm(seed = 1))
 summary(mod5_gwdsp)
 
 mod5_gwesp = ergm(net ~ edges + mutual +
-								nodecov("gdp") + nodecov("xCoordinate") + nodecov("yCoordinate") +
-								nodefactor("continent") + nodefactor("partition") +
-								absdiff("gdp") +
-								nodematch("continent") + nodematch("partition") +
+								nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
+								absdiff("gdp") + nodematch("continent") + nodematch("partition") +
 								gwesp(decay = 1, fixed = T),
-							verbose = 4,
+							verbose = 2,
 							control = control.ergm(seed = 1))
 summary(mod5_gwesp)
 
-mod5_gwdsp_2 = ergm(net ~ mutual +
-											nodecov("gdp") + nodecov("xCoordinate") + nodecov("yCoordinate") +
-											nodefactor("continent") + nodefactor("partition") +
-											absdiff("gdp") +
-											nodematch("continent") + nodematch("partition") +
-											gwdsp(decay = 1, fixed = T),
-										verbose = 4,
-										control = control.ergm(seed = 1))
-summary(mod5_gwdsp_2)
+### Simulating models
 
 fnc = function(xx){
 	ig = asIgraph(xx)
