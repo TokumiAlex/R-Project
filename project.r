@@ -157,6 +157,15 @@ label_colors[V(g)$name %in% top_nodes] <- "red"
 plot(g, layout = l, rescale = FALSE, vertex.label.cex = st_eigen_centrality * 3, vertex.size = 0, vertex.label.color = label_colors, edge.color = "lightblue")
 
 
+library(igraph)
+library(ergm)
+library(intergraph)
+library(sbm)
+library(ggplot2)
+library(gridExtra)
+
+load("workspace.Rdata")
+
 net = network(Y, directed = T)
 
 # net %v% "continent" = V(g)$continent
@@ -193,7 +202,7 @@ summary(mod1_onlyReceiver)
 mod2 = ergm(net ~ edges + receiver + mutual,
 						control = control.ergm(seed = 1))
 summary(mod2)
-#could not be estimated
+#could not be estimated (neanche dal mio fisso)
 
 mod2_onlyMutual = ergm(net ~ edges + mutual,
 							control = control.ergm(seed = 1))
@@ -205,14 +214,28 @@ mod2_allAttributes = ergm(net ~ edges + mutual +
 						control = control.ergm(seed = 1))
 summary(mod2_allAttributes)
 
+mod2_allAttributes_woPartitionHomophily = ergm(net ~ edges + mutual +
+                            nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
+                            absdiff("gdp") + nodematch("continent"),
+                          control = control.ergm(seed = 1))
+summary(mod2_allAttributes_woPartitionHomophily)
+
+AIC(mod2_allAttributes, mod2_allAttributes_woPartitionHomophily)
+BIC(mod2_allAttributes, mod2_allAttributes_woPartitionHomophily)
+
 #Markov
+
+# istar(2) indica la propensione della rete ad avere più partner con direzione in ingresso, cioè dato un nodo che ha un collegamento in ingresso quant'è la probabilità che ne abbia un'altro
+# ostar(2) è uguale ad istar(2) soltanto con direzione uscente
+# triangle è la propensione della rete a fare clustering
+
 mod3 = ergm(net ~ edges + mutual +
 							nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
 							absdiff("gdp") + nodematch("continent") + nodematch("partition") +
 							+ istar(2) + ostar(2) + triangle,
 						control = control.ergm(seed = 1))
 summary(mod3)
-#could not be estimated
+#could not be estimated (neanche dal mio fisso)
 
 mod3_noTriangles = ergm(net ~ edges + mutual +
 							nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
@@ -220,31 +243,72 @@ mod3_noTriangles = ergm(net ~ edges + mutual +
 							+ istar(2) + ostar(2),
 						control = control.ergm(seed = 1))
 summary(mod3_noTriangles)
-#could not be estimated
+#could not be estimated (neanche dal mio fisso)
+
+mod3_onlyIStar2 = ergm(net ~ edges + mutual +
+                          nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
+                          absdiff("gdp") + nodematch("continent") + nodematch("partition") +
+                          istar(2),
+                        control = control.ergm(seed = 1, checkpoint = "mod3_onlyIStar2/step_%03d.RData"))
+summary(mod3_onlyIStar2)
+mcmc.diagnostics(mod3_onlyIStar2)
+
+mod3_onlyIStar2_noPartitionHomophily = ergm(net ~ edges + mutual +
+                         nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
+                         absdiff("gdp") + nodematch("continent") +
+                         istar(2),
+                       control = control.ergm(seed = 1))
+summary(mod3_onlyIStar2_noPartitionHomophily)
+mcmc.diagnostics(mod3_onlyIStar2_noPartitionHomophily)
+
+mod3_onlyOStar2 = ergm(net ~ edges + mutual +
+                          nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
+                          absdiff("gdp") + nodematch("continent") + nodematch("partition") +
+                          ostar(2),
+                        verbose = 3,
+                        control = control.ergm(seed = 1))
+summary(mod3_onlyOStar2)
+#could not be estimated (neanche dal fisso, riprovare lasciandolo per più tempo)
 
 mod3_onlyTriangles = ergm(net ~ edges + mutual +
-							nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
-							absdiff("gdp") + nodematch("continent") + nodematch("partition") +
-							+ triangle,
-						control = control.ergm(seed = 1))
+                          nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
+                          absdiff("gdp") + nodematch("continent") + nodematch("partition") +
+                          triangle,
+                        verbose = 3,
+                        control = control.ergm(seed = 1))
 summary(mod3_onlyTriangles)
-#could not be estimated
+#could not be estimated (neanche dal fisso, riprovare lasciandolo per più tempo)
+
+
+# gwidegree() geometrically weighted in degree distribution for the network
+# gwodegree() geometrically weighted out degree distribution for the network
 
 mod4 = ergm(net ~ edges + mutual +
-							nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
-							absdiff("gdp") + nodematch("continent") + nodematch("partition") +
-							+ gwidegree(decay = 1, fixed = TRUE) + gwodegree(decay = 1, fixed = TRUE),
-						control = control.ergm(seed = 1))
+              nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
+              absdiff("gdp") + nodematch("continent") + nodematch("partition") +
+              gwidegree(decay = 1, fixed = TRUE) + gwodegree(decay = 1, fixed = TRUE),
+            verbose = 3,
+            control = control.ergm(seed = 1, checkpoint = "mod4/step_%03d.RData", resume = "mod4/step_005_OLD.RData"))
 summary(mod4)
-#could not be estimated
+# Ultimo fatto, da rifare (parrebbe degeneracy)
 
 mod4_onlyGwod = ergm(net ~ edges + mutual +
 							nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
 							absdiff("gdp") + nodematch("continent") + nodematch("partition") +
 							+ gwodegree(decay = 1, fixed = TRUE),
+							verbose = 3,
 						control = control.ergm(seed = 1))
 summary(mod4_onlyGwod)
-#could not be estimated
+mcmc.diagnostics(mod4_onlyGwod)
+
+mod4_onlyGwod_noPartitionHomophily_noGDPMain = ergm(net ~ edges + mutual +
+                       nodefactor("continent") + nodefactor("partition") +
+                       absdiff("gdp") + nodematch("continent") +
+                       + gwodegree(decay = 1, fixed = TRUE),
+                     verbose = 3,
+                     control = control.ergm(seed = 1))
+summary(mod4_onlyGwod_noPartitionHomophily_noGDPMain)
+
 
 mod4_onlyGwid = ergm(net ~ edges + mutual +
 							nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
@@ -253,12 +317,53 @@ mod4_onlyGwid = ergm(net ~ edges + mutual +
 						control = control.ergm(seed = 1))
 summary(mod4_onlyGwid)
 
-mod4_onlyGwid_2 = ergm(net ~ edges + mutual +
+mod4_onlyGwid_noPartitionHomophily = ergm(net ~ edges + mutual +
 							nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
 							absdiff("gdp") + nodematch("continent") +
 							gwidegree(decay = 1, fixed = TRUE),
 						control = control.ergm(seed = 1))
-summary(mod4_onlyGwid_2)
+summary(mod4_onlyGwid_noPartitionHomophily)
+
+AIC(mod4_onlyGwod, mod4_onlyGwod_noPartitionHomophily_noGDPMain, mod4_onlyGwid, mod4_onlyGwid_noPartitionHomophily)
+BIC(mod4_onlyGwod, mod4_onlyGwod_noPartitionHomophily_noGDPMain, mod4_onlyGwid, mod4_onlyGwid_noPartitionHomophily)
+
+mcmc.diagnostics(mod4_onlyGwod)
+mcmc.diagnostics(mod4_onlyGwod_noPartitionHomophily_noGDPMain)
+
+# Qua dovresti stampare dei grafi con hist per mettere a confronto i due modelli, da adesso ASSUMERÒ che il modello migliore sia il primo.
+
+mod4_Gwod_withTriangle_With2Star = ergm(net ~ edges + mutual +
+                       nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
+                       absdiff("gdp") + nodematch("continent") + nodematch("partition") +
+                       triangle + istar(2) + ostar(2) +
+                       gwodegree(decay = 1, fixed = TRUE),
+                     control = control.ergm(seed = 1))
+# riprovare per più tempo 
+
+mod4_Gwod_With2Star = ergm(net ~ edges + mutual +
+                        nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
+                        absdiff("gdp") + nodematch("continent") + nodematch("partition") +
+                        istar(2) + ostar(2) +
+                        gwodegree(decay = 1, fixed = TRUE),
+                      control = control.ergm(seed = 1))
+# riprovare per più tempo 
+
+mod4_Gwod_With2IStar = ergm(net ~ edges + mutual +
+                             nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
+                             absdiff("gdp") + nodematch("continent") + nodematch("partition") +
+                             istar(2) +
+                             gwodegree(decay = 1, fixed = TRUE),
+                           control = control.ergm(seed = 1))
+# Degeneracy assicurata
+
+
+mod4_Gwod_With2OStar = ergm(net ~ edges + mutual +
+                              nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
+                              absdiff("gdp") + nodematch("continent") + nodematch("partition") +
+                              ostar(2) +
+                              gwodegree(decay = 1, fixed = TRUE),
+                            control = control.ergm(seed = 1))
+# Degeneracy assicurata
 
 #social circuit model
 
