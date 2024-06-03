@@ -364,7 +364,7 @@ mod5 <- ergm(net ~ edges + mutual +
 					absdiff("gdp") + nodematch("continent") + nodematch("partition") +
 					gwesp(decay = 1, fixed = T) + gwdsp(decay = 1, fixed = T),
 				verbose = 2,
-				control = control.ergm(seed = 1, checkpoint = "mod5/step_%03d.RData"))
+				control = control.ergm(seed = 1, checkpoint = "mod5/step_%03d.RData", resume = "mod5/step_resume.RData"))
 summary(mod5)
 #trying
 
