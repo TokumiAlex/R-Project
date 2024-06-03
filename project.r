@@ -10,24 +10,24 @@ library(gridExtra)
 load("workspace.Rdata")
 ls()
 
-edgeList = read.table("edge_list.txt", sep = "", head = FALSE)
+edgeList <- read.table("edge_list.txt", sep = "", head = FALSE)
 head(edgeList)
 g <- graph_from_edgelist(as.matrix(edgeList), directed=TRUE)
 
-attr = read.table("nodes_attr.txt", sep = "", head = TRUE)
+attr <- read.table("nodes_attr.txt", sep = "", head = TRUE)
 head(attr)
 
 
-V(g)$continent = attr$Continents
-V(g)$gdp = attr$GDP
-V(g)$world_partition = attr$World_Partitions
-V(g)$xCoordinate = attr$xCoordinates
-V(g)$yCoordinate = attr$yCoordinates
-V(g)$name = attr$Names
+V(g)$continent <- attr$Continents
+V(g)$gdp <- attr$GDP
+V(g)$world_partition <- attr$World_Partitions
+V(g)$xCoordinate <- attr$xCoordinates
+V(g)$yCoordinate <- attr$yCoordinates
+V(g)$name <- attr$Names
 
 x11(width=100, height = 50)
 # Imposta i nodi in base alla loro posizione geografica
-l = matrix(, nrow=length(V(g)), ncol=2)
+l <- matrix(, nrow=length(V(g)), ncol=2)
 for (i in 1:length(V(g))) {
 	l[i, 1] <- V(g)[i]$xCoordinate* 4 - 2
 	l[i, 2] <- 2.25 - V(g)[i]$yCoordinate * 4
@@ -70,8 +70,8 @@ assortativity_worldpartition <- assortativity(g, V(g)$world_partition, directed 
 
 # Create a table with names and values
 table <- data.frame(
-	Names = c("Edge Density", "Reciprocity", "Transitivity", "Odd-Ratio of Edge Density", "Odd-Ratio of Transitivity", "Tau", "Assortativity (Continent)", "Assortativity (GDP)", "Assortativity (World Partition)"),
-	Values = c(rho, reciprocity, transitivity, odd_rho, odd_transitivity, tau, assortativity_continent, assortativity_gdp, assortativity_worldpartition)
+	Names <- c("Edge Density", "Reciprocity", "Transitivity", "Odd-Ratio of Edge Density", "Odd-Ratio of Transitivity", "Tau", "Assortativity (Continent)", "Assortativity (GDP)", "Assortativity (World Partition)"),
+	Values <- c(rho, reciprocity, transitivity, odd_rho, odd_transitivity, tau, assortativity_continent, assortativity_gdp, assortativity_worldpartition)
 )
 # Save the table as an image
 png("table.png", width = 800*3, height = 400*3, res=72*3)
@@ -157,13 +157,6 @@ label_colors[V(g)$name %in% top_nodes] <- "red"
 plot(g, layout = l, rescale = FALSE, vertex.label.cex = st_eigen_centrality * 3, vertex.size = 0, vertex.label.color = label_colors, edge.color = "lightblue")
 
 
-library(igraph)
-library(ergm)
-library(intergraph)
-library(sbm)
-library(ggplot2)
-library(gridExtra)
-
 install.packages("igraph")
 install.packages("ergm")
 install.packages("intergraph")
@@ -174,9 +167,18 @@ install.packages("language server")
 install.packages('languageserver', repos='https://p3m.dev/cran/__linux__/jammy/latest')
 
 
+library(igraph)
+library(ergm)
+library(intergraph)
+library(sbm)
+library(ggplot2)
+library(gridExtra)
+
+load("/workspaces/R-Project/workspace.RData")
+
 load("workspace.Rdata")
 
-net = network(Y, directed = T)
+net <- network(Y, directed = T)
 
 # net %v% "continent" = V(g)$continent
 # net %v% "gdp" = V(g)$gdp
@@ -184,47 +186,47 @@ net = network(Y, directed = T)
 # net %v% "xCoordinate" = V(g)$xCoordinate
 # net %v% "yCoordinate" = V(g)$yCoordinate
 
-net %v% "continent" = attr$Continents
-net %v% "gdp" = attr$GDP
-net %v% "partition" = attr$World_Partitions
-net %v% "xCoordinate" = attr$xCoordinates
-net %v% "yCoordinate" = attr$yCoordinates
-net %v% "name" = attr$Names
+net %v% "continent" <- attr$Continents
+net %v% "gdp" <- attr$GDP
+net %v% "partition" <- attr$World_Partitions
+net %v% "xCoordinate" <- attr$xCoordinates
+net %v% "yCoordinate" <- attr$yCoordinates
+net %v% "name" <- attr$Names
 
 #SRG
 
-mod0 = ergm(net ~ edges,
+mod0 <- ergm(net ~ edges,
 						control = control.ergm(seed = 1))
 summary(mod0)
 
 #NH-SRG
 
-mod1 = ergm(net ~ edges + receiver + sender,
+mod1 <- ergm(net ~ edges + receiver + sender,
 										 control = control.ergm(seed = 1))
 summary(mod1)
 
-mod1_onlyReceiver = ergm(net ~ edges + receiver,
+mod1_onlyReceiver <- ergm(net ~ edges + receiver,
 						control = control.ergm(seed = 1))
 summary(mod1_onlyReceiver)
 
 #p1 model
 
-mod2 = ergm(net ~ edges + receiver + mutual,
+mod2 <- ergm(net ~ edges + receiver + mutual,
 						control = control.ergm(seed = 1))
 summary(mod2)
 #could not be estimated (neanche dal mio fisso)
 
-mod2_onlyMutual = ergm(net ~ edges + mutual,
+mod2_onlyMutual <- ergm(net ~ edges + mutual,
 							control = control.ergm(seed = 1))
 summary(mod2_onlyMutual)
 
-mod2_allAttributes = ergm(net ~ edges + mutual +
+mod2_allAttributes <- ergm(net ~ edges + mutual +
 							nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
 							absdiff("gdp") + nodematch("continent") + nodematch("partition"),
 						control = control.ergm(seed = 1))
 summary(mod2_allAttributes)
 
-mod2_allAttributes_woPartitionHomophily = ergm(net ~ edges + mutual +
+mod2_allAttributes_woPartitionHomophily <- ergm(net ~ edges + mutual +
                             nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
                             absdiff("gdp") + nodematch("continent"),
                           control = control.ergm(seed = 1))
@@ -239,7 +241,7 @@ BIC(mod2_allAttributes, mod2_allAttributes_woPartitionHomophily)
 # ostar(2) è uguale ad istar(2) soltanto con direzione uscente
 # triangle è la propensione della rete a fare clustering
 
-mod3 = ergm(net ~ edges + mutual +
+mod3 <- ergm(net ~ edges + mutual +
 							nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
 							absdiff("gdp") + nodematch("continent") + nodematch("partition") +
 							+ istar(2) + ostar(2) + triangle,
@@ -248,7 +250,7 @@ mod3 = ergm(net ~ edges + mutual +
 summary(mod3)
 # Degeneracy
 
-mod3_noTriangles = ergm(net ~ edges + mutual +
+mod3_noTriangles <- ergm(net ~ edges + mutual +
 							nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
 							absdiff("gdp") + nodematch("continent") + nodematch("partition") +
 							+ istar(2) + ostar(2),
@@ -256,7 +258,7 @@ mod3_noTriangles = ergm(net ~ edges + mutual +
 summary(mod3_noTriangles)
 # Degeneracy
 
-mod3_onlyIStar2 = ergm(net ~ edges + mutual +
+mod3_onlyIStar2 <- ergm(net ~ edges + mutual +
                           nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
                           absdiff("gdp") + nodematch("continent") + nodematch("partition") +
                           istar(2),
@@ -264,7 +266,7 @@ mod3_onlyIStar2 = ergm(net ~ edges + mutual +
 summary(mod3_onlyIStar2)
 mcmc.diagnostics(mod3_onlyIStar2)
 
-mod3_onlyIStar2_noPartitionHomophily = ergm(net ~ edges + mutual +
+mod3_onlyIStar2_noPartitionHomophily <- ergm(net ~ edges + mutual +
                          nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
                          absdiff("gdp") + nodematch("continent") +
                          istar(2),
@@ -272,7 +274,7 @@ mod3_onlyIStar2_noPartitionHomophily = ergm(net ~ edges + mutual +
 summary(mod3_onlyIStar2_noPartitionHomophily)
 mcmc.diagnostics(mod3_onlyIStar2_noPartitionHomophily)
 
-mod3_onlyOStar2 = ergm(net ~ edges + mutual +
+mod3_onlyOStar2 <- ergm(net ~ edges + mutual +
                           nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
                           absdiff("gdp") + nodematch("continent") + nodematch("partition") +
                           ostar(2),
@@ -281,7 +283,7 @@ mod3_onlyOStar2 = ergm(net ~ edges + mutual +
 summary(mod3_onlyOStar2)
 # Degeneracy
 
-mod3_onlyTriangles = ergm(net ~ edges + mutual +
+mod3_onlyTriangles <- ergm(net ~ edges + mutual +
                           nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
                           absdiff("gdp") + nodematch("continent") + nodematch("partition") +
                           triangle,
@@ -294,7 +296,7 @@ summary(mod3_onlyTriangles)
 # gwidegree() geometrically weighted in degree distribution for the network
 # gwodegree() geometrically weighted out degree distribution for the network
 
-mod4 = ergm(net ~ edges + mutual +
+mod4 <- ergm(net ~ edges + mutual +
               nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
               absdiff("gdp") + nodematch("continent") + nodematch("partition") +
               triangle + gwidegree(decay = 1, fixed = TRUE) + gwodegree(decay = 1, fixed = TRUE),
@@ -303,7 +305,7 @@ mod4 = ergm(net ~ edges + mutual +
 summary(mod4)
 # Degeneracy
 
-mod4_onlyGwod = ergm(net ~ edges + mutual +
+mod4_onlyGwod <- ergm(net ~ edges + mutual +
 							nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
 							absdiff("gdp") + nodematch("continent") + nodematch("partition") +
 							+ gwodegree(decay = 1, fixed = TRUE),
@@ -311,22 +313,25 @@ mod4_onlyGwod = ergm(net ~ edges + mutual +
 						control = control.ergm(seed = 1))
 summary(mod4_onlyGwod)
 mcmc.diagnostics(mod4_onlyGwod)
+# Done
 
-mod4_onlyGwod_noPartitionHomophily_noGDPMain = ergm(net ~ edges + mutual +
+mod4_onlyGwod_noPartitionHomophily_noGDPMain <- ergm(net ~ edges + mutual +
                        nodefactor("continent") + nodefactor("partition") +
                        absdiff("gdp") + nodematch("continent") +
                        + gwodegree(decay = 1, fixed = TRUE),
                      verbose = 3,
                      control = control.ergm(seed = 1))
 summary(mod4_onlyGwod_noPartitionHomophily_noGDPMain)
+# Done
 
 
-mod4_onlyGwid = ergm(net ~ edges + mutual +
+mod4_onlyGwid <- ergm(net ~ edges + mutual +
 							nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
 							absdiff("gdp") + nodematch("continent") + nodematch("partition") +
 							+ gwidegree(decay = 1, fixed = TRUE),
 						control = control.ergm(seed = 1))
 summary(mod4_onlyGwid)
+# Done
 
 mod4_onlyGwid_noPartitionHomophily = ergm(net ~ edges + mutual +
 							nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
@@ -334,6 +339,7 @@ mod4_onlyGwid_noPartitionHomophily = ergm(net ~ edges + mutual +
 							gwidegree(decay = 1, fixed = TRUE),
 						control = control.ergm(seed = 1))
 summary(mod4_onlyGwid_noPartitionHomophily)
+# Done
 
 mod4_noTriangle = ergm(net ~ edges + mutual +
 							nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
@@ -353,15 +359,16 @@ mcmc.diagnostics(mod4_onlyGwod_noPartitionHomophily_noGDPMain)
 # Qua dovresti stampare dei grafi con hist per mettere a confronto i due modelli, da adesso ASSUMERÒ che il modello migliore sia il primo.
 
 #social circuit model
-mod5 = ergm(net ~ edges + mutual +
+mod5 <- ergm(net ~ edges + mutual +
 					nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
 					absdiff("gdp") + nodematch("continent") + nodematch("partition") +
 					gwesp(decay = 1, fixed = T) + gwdsp(decay = 1, fixed = T),
 				verbose = 2,
 				control = control.ergm(seed = 1, checkpoint = "mod5/step_%03d.RData"))
 summary(mod5)
+#trying
 
-mod5_gwdsp = ergm(net ~ edges + mutual +
+mod5_gwdsp <- ergm(net ~ edges + mutual +
 							nodecov("gdp")+ nodefactor("continent") + nodefactor("partition") +
 							absdiff("gdp") + nodematch("continent") + nodematch("partition") +
 							gwdsp(decay = 1, fixed = T),
@@ -369,7 +376,7 @@ mod5_gwdsp = ergm(net ~ edges + mutual +
 						control = control.ergm(seed = 1))
 summary(mod5_gwdsp)
 
-mod5_gwesp = ergm(net ~ edges + mutual +
+mod5_gwesp <- ergm(net ~ edges + mutual +
 								nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
 								absdiff("gdp") + nodematch("continent") + nodematch("partition") +
 								gwesp(decay = 1, fixed = T),
@@ -379,20 +386,20 @@ summary(mod5_gwesp)
 
 ### Simulating models
 
-fnc = function(xx){
-	ig = asIgraph(xx)
-	tr = transitivity(ig)
-	ideg = sd(degree(ig, mode = "in"))
-	odeg = sd(degree(ig, mode = "out"))
-	dens = edge_density(ig)
+fnc <- function(xx){
+	ig <- asIgraph(xx)
+	tr <- transitivity(ig)
+	ideg <- sd(degree(ig, mode = "in"))
+	odeg <- sd(degree(ig, mode = "out"))
+	dens <- edge_density(ig)
 	return(c(tr, ideg, odeg, dens))
 }
 
-sim2 = simulate(mod6_gwdsp_2, nsim = 100, verbose = TRUE, seed = 1)
+sim2 <- simulate(mod6_gwdsp_2, nsim = 100, verbose = TRUE, seed = 1)
 
-null.distr = matrix(,100,4)
+null.distr <- matrix(,100,4)
 for(b in 1:100){
-	null.distr[b,] = fnc(sim2[[b]])
+	null.distr[b,] <- fnc(sim2[[b]])
 }
 dev.new()
 par(mfrow = c(4,1))
@@ -407,11 +414,11 @@ mean(sd(degree(g, mode = "out")) > null.distr[, 3])
 mean(edge_density(g) > null.distr[, 4])
 
 # simuliamo anche mod6_gwdsp per capire quali sono le differenze tra mod6_gwdsp e mod6_gwdsp_2
-sim = simulate(mod6_gwdsp, nsim = 100, verbose = TRUE, seed = 1)
+sim <- simulate(mod6_gwdsp, nsim = 100, verbose = TRUE, seed = 1)
 
-null.distr = matrix(,100,4)
+null.distr <- matrix(,100,4)
 for(b in 1:100){
-	null.distr[b,] = fnc(sim[[b]])
+	null.distr[b,] <- fnc(sim[[b]])
 }
 dev.new()
 par(mfrow = c(4,1))
@@ -426,11 +433,11 @@ mean(sd(degree(g, mode = "out")) > null.distr[, 3])
 mean(edge_density(g) > null.distr[, 4])
 
 # simuliamo anche mod0 pe divertimento
-sim0 = simulate(mod0, nsim = 100, verbose = TRUE, seed = 1)
+sim0 <- simulate(mod0, nsim = 100, verbose = TRUE, seed = 1)
 
-null.distr = matrix(,100,4)
+null.distr <- matrix(,100,4)
 for(b in 1:100){
-	null.distr[b,] = fnc(sim0[[b]])
+	null.distr[b,] <- fnc(sim0[[b]])
 }
 dev.new()
 par(mfrow = c(4,1))
@@ -447,7 +454,7 @@ mean(edge_density(g) > null.distr[, 4])
 # SBM
 plotMyMatrix(as.matrix(Y), dimLabels = list(row = 'nations', col = 'nations'))
 
-sbm1 = estimateSimpleSBM(as.matrix(Y), "bernoulli", dimLabels = 'nations',
+sbm1 <- estimateSimpleSBM(as.matrix(Y), "bernoulli", dimLabels = 'nations',
 												 estimOptions = list(verbosity = 1))
 
 # let us look at the results
@@ -474,7 +481,7 @@ sbm1$storedModels
 
 sbm1$memberships
 
-prMaxes = c(80)
+prMaxes <- c(80)
 for (i in 1:80) {
 	prMaxes[i] <- max(sbm1$probMemberships[i,])
 }
@@ -482,19 +489,19 @@ order(prMaxes, decreasing = FALSE)
 prMaxes[order(prMaxes, decreasing = FALSE)]
 
 # Prendiamo solo quelli sotto il 0.95
-ordSBM1 = order(prMaxes, decreasing = FALSE)[1:7]
+ordSBM1 <- order(prMaxes, decreasing = FALSE)[1:7]
 prMaxes[ordSBM1]
-m = matrix(, nrow = 7, ncol = 6, dimnames = list(V(g)$name[ordSBM1], c("1", "2", "3", "4", "5", "6")))
+m <- matrix(, nrow = 7, ncol = 6, dimnames = list(V(g)$name[ordSBM1], c("1", "2", "3", "4", "5", "6")))
 for (i in 1:7) {
-	m[i,1] = sbm1$probMemberships[ordSBM1[i], 1]
-	m[i,2] = sbm1$probMemberships[ordSBM1[i], 2]
-	m[i,3] = sbm1$probMemberships[ordSBM1[i], 3]
-	m[i,4] = sbm1$probMemberships[ordSBM1[i], 4]
-	m[i,5] = sbm1$probMemberships[ordSBM1[i], 5]
-	m[i,6] = sbm1$probMemberships[ordSBM1[i], 6]
+	m[i,1] <- sbm1$probMemberships[ordSBM1[i], 1]
+	m[i,2] <- sbm1$probMemberships[ordSBM1[i], 2]
+	m[i,3] <- sbm1$probMemberships[ordSBM1[i], 3]
+	m[i,4] <- sbm1$probMemberships[ordSBM1[i], 4]
+	m[i,5] <- sbm1$probMemberships[ordSBM1[i], 5]
+	m[i,6] <- sbm1$probMemberships[ordSBM1[i], 6]
 }
 m
 
-membership_colors = palette.colors(9)[-1]
+membership_colors <- palette.colors(9)[-1]
 plot(g, layout = l, rescale = FALSE, vertex.size=10, vertex.label.font = 2, vertex.color = membership_colors[sbm1$memberships])
 legend("topright", legend = c("1", "2", "3", "4", "5", "6"), fill = membership_colors)
