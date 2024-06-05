@@ -12,7 +12,7 @@ ls()
 
 edgeList <- read.table("edge_list.txt", sep = "", head = FALSE)
 head(edgeList)
-g <- graph_from_edgelist(as.matrix(edgeList), directed=TRUE)
+g <- graph_from_edgelist(as.matrix(edgeList), directed = TRUE)
 
 attr <- read.table("nodes_attr.txt", sep = "", head = TRUE)
 head(attr)
@@ -25,17 +25,21 @@ V(g)$xCoordinate <- attr$xCoordinates
 V(g)$yCoordinate <- attr$yCoordinates
 V(g)$name <- attr$Names
 
-x11(width=100, height = 50)
+x11(width = 100, height = 50)
 # Imposta i nodi in base alla loro posizione geografica
-l <- matrix(, nrow=length(V(g)), ncol=2)
+l <- matrix(, nrow = length(V(g)), ncol = 2)
 for (i in 1:length(V(g))) {
-	l[i, 1] <- V(g)[i]$xCoordinate* 4 - 2
+	l[i, 1] <- V(g)[i]$xCoordinate * 4 - 2
 	l[i, 2] <- 2.25 - V(g)[i]$yCoordinate * 4
 }
 
 #mostra il grafo per continenti
 continent_colors <- palette.colors(9)[-1]
-plot(g, layout = l, rescale=FALSE, vertex.shape = "rectangle", vertex.size=19, vertex.size2= 3, vertex.label.font = 2, vertex.color = continent_colors[V(g)$continent])
+plot(g, layout = l, rescale = FALSE, 
+	vertex.shape = "rectangle", vertex.size = 19, 
+	vertex.size2 = 3, vertex.label.font = 2, 
+	vertex.color = continent_colors[V(g)$continent])
+
 continent_names <- c("Africa", "Asia", "Europe", "North America", "Oceania", "South America")
 legend("topright", legend = continent_names, fill = continent_colors, cex = 2)
 
@@ -175,6 +179,7 @@ library(ggplot2)
 library(gridExtra)
 
 load("/workspaces/R-Project/workspace.RData")
+save("./../../workspaces/R-Project/workspace.RData")
 
 load("workspace.Rdata")
 
@@ -333,7 +338,7 @@ mod4_onlyGwid <- ergm(net ~ edges + mutual +
 summary(mod4_onlyGwid)
 # Done
 
-mod4_onlyGwid_noPartitionHomophily = ergm(net ~ edges + mutual +
+mod4_onlyGwid_noPartitionHomophily <- ergm(net ~ edges + mutual +
 							nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
 							absdiff("gdp") + nodematch("continent") +
 							gwidegree(decay = 1, fixed = TRUE),
@@ -341,7 +346,7 @@ mod4_onlyGwid_noPartitionHomophily = ergm(net ~ edges + mutual +
 summary(mod4_onlyGwid_noPartitionHomophily)
 # Done
 
-mod4_noTriangle = ergm(net ~ edges + mutual +
+mod4_noTriangle <- ergm(net ~ edges + mutual +
 							nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
 							absdiff("gdp") + nodematch("continent") + nodematch("partition") +
 							gwidegree(decay = 1, fixed = TRUE) + gwodegree(decay = 1, fixed = TRUE),
@@ -364,24 +369,32 @@ mod5 <- ergm(net ~ edges + mutual +
 					absdiff("gdp") + nodematch("continent") + nodematch("partition") +
 					gwesp(decay = 1, fixed = T) + gwdsp(decay = 1, fixed = T),
 				verbose = 2,
-				control = control.ergm(seed = 1, checkpoint = "mod5/step_%03d.RData", resume = "mod5/step_resume.RData"))
+				control = control.ergm(seed = 1, checkpoint = "mod5/step_%03d.RData", resume = "mod5/step_resume_3.RData"))
 summary(mod5)
 #trying
 
 mod5_gwdsp <- ergm(net ~ edges + mutual +
-							nodecov("gdp")+ nodefactor("continent") + nodefactor("partition") +
-							absdiff("gdp") + nodematch("continent") + nodematch("partition") +
-							gwdsp(decay = 1, fixed = T),
-						verbose = 2,
-						control = control.ergm(seed = 1))
+						nodecov("gdp")+ nodefactor("continent") + nodefactor("partition") +
+						absdiff("gdp") + nodematch("continent") + nodematch("partition") +
+						gwdsp(decay = 1, fixed = T),
+					verbose = 2,
+					control = control.ergm(seed = 1))
 summary(mod5_gwdsp)
 
+mod5_gwdsp_2 <- ergm(net ~ edges +
+						nodefactor("continent") + nodefactor("partition") +
+						absdiff("gdp") + nodematch("continent") + nodematch("partition") +
+						gwdsp(decay = 1, fixed = T),
+					verbose = 2,
+					control = control.ergm(seed = 1))
+summary(mod5_gwdsp_2)
+
 mod5_gwesp <- ergm(net ~ edges + mutual +
-								nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
-								absdiff("gdp") + nodematch("continent") + nodematch("partition") +
-								gwesp(decay = 1, fixed = T),
-							verbose = 2,
-							control = control.ergm(seed = 1))
+						nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
+						absdiff("gdp") + nodematch("continent") + nodematch("partition") +
+						gwesp(decay = 1, fixed = T),
+					verbose = 2,
+					control = control.ergm(seed = 1))
 summary(mod5_gwesp)
 
 ### Simulating models
