@@ -12,11 +12,12 @@ ls()
 
 edgeList <- read.table("edge_list.txt", sep = "", head = FALSE)
 head(edgeList)
-g <- graph_from_edgelist(as.matrix(edgeList), directed = TRUE)
+
 
 attr <- read.table("nodes_attr.txt", sep = "", head = TRUE)
 head(attr)
 
+g <- graph_from_edgelist(as.matrix(edgeList), directed = TRUE)
 
 V(g)$continent <- attr$Continents
 V(g)$gdp <- attr$GDP
@@ -78,7 +79,7 @@ table <- data.frame(
 	Values <- c(rho, reciprocity, transitivity, odd_rho, odd_transitivity, tau, assortativity_continent, assortativity_gdp, assortativity_worldpartition)
 )
 # Save the table as an image
-png("table.png", width = 800*3, height = 400*3, res=72*3)
+png("table.png", width = 8000*3, height = 4000*3, res=720*3)
 grid.table(table)
 dev.off()
 
@@ -180,6 +181,7 @@ library(gridExtra)
 
 load("/workspaces/R-Project/workspace.RData")
 save("./../../workspaces/R-Project/workspace.RData")
+save.image("/workspaces/R-Project/workspace.RData")
 
 load("workspace.Rdata")
 
@@ -381,13 +383,13 @@ mod5_gwdsp <- ergm(net ~ edges + mutual +
 					control = control.ergm(seed = 1))
 summary(mod5_gwdsp)
 
-mod5_gwdsp_2 <- ergm(net ~ edges +
+mod5_gwdsp_NoMutualEffect_NoGDPMain <- ergm(net ~ edges +
 						nodefactor("continent") + nodefactor("partition") +
 						absdiff("gdp") + nodematch("continent") + nodematch("partition") +
 						gwdsp(decay = 1, fixed = T),
 					verbose = 2,
-					control = control.ergm(seed = 1))
-summary(mod5_gwdsp_2)
+					control = control.ergm(seed = 1, checkpoint = "mod5_gwdsp_2/step_%03d.RData"))
+summary(mod5_gwdsp_NoMutualEffect_NoGDPMain)
 
 mod5_gwesp <- ergm(net ~ edges + mutual +
 						nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
@@ -396,6 +398,9 @@ mod5_gwesp <- ergm(net ~ edges + mutual +
 					verbose = 2,
 					control = control.ergm(seed = 1))
 summary(mod5_gwesp)
+# Degeneracy
+
+#zamn
 
 ### Simulating models
 
