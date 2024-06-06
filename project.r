@@ -97,6 +97,7 @@ st_closeness_out <- closeness(g, mode = "out", normalized = TRUE)
 
 betweenness <- betweenness(g, directed = TRUE)
 st_betweenness <- betweenness(g, directed = TRUE, normalized = TRUE)
+
 eigen_centrality <- eigen_centrality(g)$vector
 
 in_centr_degree <- centr_degree(g, loops = FALSE, mode = "in")
@@ -148,6 +149,8 @@ summary(betweenness)
 betweenness[order(betweenness, decreasing = TRUE)]
 summary(st_betweenness)
 
+hist(closeness_in)
+
 top_nodes <- names(sort(st_betweenness, decreasing = TRUE)[1:5])
 label_colors <- rep("black", length(V(g)))
 label_colors[V(g)$name %in% top_nodes] <- "red"
@@ -178,6 +181,24 @@ library(intergraph)
 library(sbm)
 library(ggplot2)
 library(gridExtra)
+library(grid)
+
+# Calcolo della InDegree Centrality
+in_degree <- degree(g, mode = "in")
+
+# Summary e rappresentazione
+
+dev.new()
+par(mfrow = c(3,1))
+summary(in_degree)
+
+table_inDegree <- data.frame(
+	Names = V(g)$name[order(in_degree, decreasing = TRUE)[1:10]],
+	Values = in_degree[order(in_degree, decreasing = TRUE)[1:10]]
+)
+grid.table(table_inDegree, rows = NULL, cols = c("Nazioni", "In Degree"))
+
+
 
 load("/workspaces/R-Project/workspace.RData")
 save("./../../workspaces/R-Project/workspace.RData")
