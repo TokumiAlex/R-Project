@@ -180,8 +180,8 @@ library(ergm)
 library(intergraph)
 library(sbm)
 library(ggplot2)
-library(gridExtra)
 library(grid)
+library(gridExtra)
 
 # Calcolo della InDegree Centrality
 in_degree <- degree(g, mode = "in")
