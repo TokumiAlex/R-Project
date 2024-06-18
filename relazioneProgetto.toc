@@ -1,0 +1,31 @@
+\contentsline {section}{\numberline {1}Introduzione}{2}{section.1}%
+\contentsline {subsection}{\numberline {1.1}Ambiente di Sviluppo}{2}{subsection.1.1}%
+\contentsline {subsection}{\numberline {1.2}La nostra Rete}{2}{subsection.1.2}%
+\contentsline {subsubsection}{\numberline {1.2.1}Proprietà della Rete}{2}{subsubsection.1.2.1}%
+\contentsline {section}{\numberline {2}Statistiche di Rete}{4}{section.2}%
+\contentsline {section}{\numberline {3}Statistiche Nodali}{5}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Degree Centrality}{5}{subsection.3.1}%
+\contentsline {subsubsection}{\numberline {3.1.1}In-Degree Centrality}{6}{subsubsection.3.1.1}%
+\contentsline {paragraph}{Conclusioni}{7}{section*.2}%
+\contentsline {subsubsection}{\numberline {3.1.2}Out-Degree Centrality}{7}{subsubsection.3.1.2}%
+\contentsline {paragraph}{Conclusioni}{9}{section*.3}%
+\contentsline {subsection}{\numberline {3.2}Closeness Centrality}{9}{subsection.3.2}%
+\contentsline {subsubsection}{\numberline {3.2.1}In-Closeness Centrality}{9}{subsubsection.3.2.1}%
+\contentsline {paragraph}{Conclusioni}{11}{section*.4}%
+\contentsline {subsubsection}{\numberline {3.2.2}Out-Closeness Centrality}{11}{subsubsection.3.2.2}%
+\contentsline {paragraph}{Conclusioni}{13}{section*.5}%
+\contentsline {subsection}{\numberline {3.3}Betweenness Centrality}{13}{subsection.3.3}%
+\contentsline {paragraph}{Conclusioni}{15}{section*.6}%
+\contentsline {subsection}{\numberline {3.4}EigenVector Centrality}{15}{subsection.3.4}%
+\contentsline {paragraph}{Conclusioni}{17}{section*.7}%
+\contentsline {section}{\numberline {4}Modelli}{17}{section.4}%
+\contentsline {subsection}{\numberline {4.1}Simple Random Graph Model (SRG)}{17}{subsection.4.1}%
+\contentsline {subsection}{\numberline {4.2}Exponential Random Graph Models (ERGMs)}{19}{subsection.4.2}%
+\contentsline {subsubsection}{\numberline {4.2.1}Non-Homogeneus Simple Random Graph Model (NH-SRG)}{19}{subsubsection.4.2.1}%
+\contentsline {subsubsection}{\numberline {4.2.2}P1 Model}{22}{subsubsection.4.2.2}%
+\contentsline {subsubsection}{\numberline {4.2.3}Attributi Nodali}{23}{subsubsection.4.2.3}%
+\contentsline {subsubsection}{\numberline {4.2.4}Markov Graph Model}{28}{subsubsection.4.2.4}%
+\contentsline {subsubsection}{\numberline {4.2.5}Social Circuit Model}{36}{subsubsection.4.2.5}%
+\contentsline {subsection}{\numberline {4.3}Finite Mixtures}{41}{subsection.4.3}%
+\contentsline {subsubsection}{\numberline {4.3.1}Stochastic Block Model}{41}{subsubsection.4.3.1}%
+\contentsline {section}{\numberline {5}Conclusioni}{45}{section.5}%

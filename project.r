@@ -13,6 +13,8 @@ ls()
 edgeList <- read.table("edge_list.txt", sep = "", head = FALSE)
 head(edgeList)
 
+install.packages('IRkernel')
+IRkernel::installspec()
 
 attr <- read.table("nodes_attr.txt", sep = "", head = TRUE)
 head(attr)
@@ -79,7 +81,7 @@ table <- data.frame(
 	Values <- c(rho, reciprocity, transitivity, odd_rho, odd_transitivity, tau, assortativity_continent, assortativity_gdp, assortativity_worldpartition)
 )
 # Save the table as an image
-png("table.png", width = 8000*3, height = 4000*3, res=720*3)
+png("table3.png", width = 8000*3, height = 4000*3, res=720*3)
 grid.table(table)
 dev.off()
 
@@ -223,42 +225,41 @@ net %v% "name" <- attr$Names
 
 #SRG
 
-mod0 <- ergm(net ~ edges,
+model_SRG <- ergm(net ~ edges,
 						control = control.ergm(seed = 1))
-summary(mod0)
+summary(model_SRG)
 
 #NH-SRG
-
-mod1 <- ergm(net ~ edges + receiver + sender,
+model_NHSRG <- ergm(net ~ edges + receiver + sender,
 										 control = control.ergm(seed = 1))
-summary(mod1)
+summary(model_NHSRG)
 
-mod1_onlyReceiver <- ergm(net ~ edges + receiver,
+model_NHSRG_onlyReceiver <- ergm(net ~ edges + receiver,
 						control = control.ergm(seed = 1))
-summary(mod1_onlyReceiver)
+summary(model_NHSRG_onlyReceiver)
 
 #p1 model
 
-mod2 <- ergm(net ~ edges + receiver + mutual,
+model_P1 <- ergm(net ~ edges + receiver + mutual,
 						control = control.ergm(seed = 1))
 summary(mod2)
 #could not be estimated (neanche dal mio fisso)
 
-mod2_onlyMutual <- ergm(net ~ edges + mutual,
+model_P1_onlyMutual <- ergm(net ~ edges + mutual,
 							control = control.ergm(seed = 1))
-summary(mod2_onlyMutual)
+summary(model_P1_onlyMutual)
 
-mod2_allAttributes <- ergm(net ~ edges + mutual +
+model_P1_onlyMutual_NodeAttr <- ergm(net ~ edges + mutual +
 							nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
 							absdiff("gdp") + nodematch("continent") + nodematch("partition"),
 						control = control.ergm(seed = 1))
-summary(mod2_allAttributes)
+summary(model_P1_onlyMutual_NodeAttr)
 
-mod2_allAttributes_woPartitionHomophily <- ergm(net ~ edges + mutual +
+model_P1_onlyMutual_NodeAttr_noPartitionHomophily <- ergm(net ~ edges + mutual +
                             nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
                             absdiff("gdp") + nodematch("continent"),
                           control = control.ergm(seed = 1))
-summary(mod2_allAttributes_woPartitionHomophily)
+summary(model_P1_onlyMutual_NodeAttr_noPartitionHomophily)
 
 AIC(mod2_allAttributes, mod2_allAttributes_woPartitionHomophily)
 BIC(mod2_allAttributes, mod2_allAttributes_woPartitionHomophily)
@@ -269,7 +270,7 @@ BIC(mod2_allAttributes, mod2_allAttributes_woPartitionHomophily)
 # ostar(2) è uguale ad istar(2) soltanto con direzione uscente
 # triangle è la propensione della rete a fare clustering
 
-mod3 <- ergm(net ~ edges + mutual +
+model_Markov <- ergm(net ~ edges + mutual +
 							nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
 							absdiff("gdp") + nodematch("continent") + nodematch("partition") +
 							+ istar(2) + ostar(2) + triangle,
@@ -278,7 +279,7 @@ mod3 <- ergm(net ~ edges + mutual +
 summary(mod3)
 # Degeneracy
 
-mod3_noTriangles <- ergm(net ~ edges + mutual +
+model_Markov_noTriangles <- ergm(net ~ edges + mutual +
 							nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
 							absdiff("gdp") + nodematch("continent") + nodematch("partition") +
 							+ istar(2) + ostar(2),
@@ -286,92 +287,90 @@ mod3_noTriangles <- ergm(net ~ edges + mutual +
 summary(mod3_noTriangles)
 # Degeneracy
 
-mod3_onlyIStar2 <- ergm(net ~ edges + mutual +
+model_Markov_onlyIStar2 <- ergm(net ~ edges + mutual +
                           nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
                           absdiff("gdp") + nodematch("continent") + nodematch("partition") +
                           istar(2),
                         control = control.ergm(seed = 1, checkpoint = "mod3_onlyIStar2/step_%03d.RData"))
-summary(mod3_onlyIStar2)
-mcmc.diagnostics(mod3_onlyIStar2)
+summary(model_Markov_onlyIStar2)
+mcmc.diagnostics(model_Markov_onlyIStar2)
 
-mod3_onlyIStar2_noPartitionHomophily <- ergm(net ~ edges + mutual +
+model_Markov_onlyIStar2_noPartitionHomophily <- ergm(net ~ edges + mutual +
                          nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
                          absdiff("gdp") + nodematch("continent") +
                          istar(2),
                        control = control.ergm(seed = 1))
-summary(mod3_onlyIStar2_noPartitionHomophily)
-mcmc.diagnostics(mod3_onlyIStar2_noPartitionHomophily)
+summary(model_Markov_onlyIStar2_noPartitionHomophily)
+mcmc.diagnostics(model_Markov_onlyIStar2_noPartitionHomophily)
 
-mod3_onlyOStar2 <- ergm(net ~ edges + mutual +
+model_Markov_onlyOStar2 <- ergm(net ~ edges + mutual +
                           nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
                           absdiff("gdp") + nodematch("continent") + nodematch("partition") +
                           ostar(2),
                         verbose = 2,
                         control = control.ergm(seed = 1))
-summary(mod3_onlyOStar2)
+summary(model_Markov_onlyOStar2)
 # Degeneracy
 
-mod3_onlyTriangles <- ergm(net ~ edges + mutual +
+model_Markov_onlyTriangles <- ergm(net ~ edges + mutual +
                           nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
                           absdiff("gdp") + nodematch("continent") + nodematch("partition") +
                           triangle,
                         verbose = 2,
                         control = control.ergm(seed = 1))
-summary(mod3_onlyTriangles)
+summary(model_Markov_onlyTriangles)
 #could not be estimated (neanche dal fisso, riprovare lasciandolo per più tempo)
 
 
 # gwidegree() geometrically weighted in degree distribution for the network
 # gwodegree() geometrically weighted out degree distribution for the network
 
-mod4 <- ergm(net ~ edges + mutual +
+model_Markov_AlternatingKStar <- ergm(net ~ edges + mutual +
               nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
               absdiff("gdp") + nodematch("continent") + nodematch("partition") +
               triangle + gwidegree(decay = 1, fixed = TRUE) + gwodegree(decay = 1, fixed = TRUE),
             verbose = 2,
             control = control.ergm(seed = 1, checkpoint = "mod4/step_%03d.RData"))
-summary(mod4)
+summary(model_Markov_AlternatingKStar)
 # Degeneracy
 
-mod4_onlyGwod <- ergm(net ~ edges + mutual +
+model_Markov_onlyAlternatingOutKStar <- ergm(net ~ edges + mutual +
 							nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
-							absdiff("gdp") + nodematch("continent") + nodematch("partition") +
-							+ gwodegree(decay = 1, fixed = TRUE),
+							absdiff("gdp") + nodematch("continent") + nodematch("partition") + 
+							gwodegree(decay = 1, fixed = TRUE),
 							verbose = 3,
 						control = control.ergm(seed = 1))
-summary(mod4_onlyGwod)
-mcmc.diagnostics(mod4_onlyGwod)
+summary(model_Markov_onlyAlternatingOutKStar)
+mcmc.diagnostics(model_Markov_onlyAlternatingOutKStar)
 # Done
 
-mod4_onlyGwod_noPartitionHomophily_noGDPMain <- ergm(net ~ edges + mutual +
+model_Markov_onlyAlternatingOutKStar_noPartitionHomophily_noGDPMain <- ergm(net ~ edges + mutual +
                        nodefactor("continent") + nodefactor("partition") +
-                       absdiff("gdp") + nodematch("continent") +
-                       + gwodegree(decay = 1, fixed = TRUE),
+                       absdiff("gdp") + nodematch("continent") + 
+                       gwodegree(decay = 1, fixed = TRUE),
                      verbose = 3,
                      control = control.ergm(seed = 1))
-summary(mod4_onlyGwod_noPartitionHomophily_noGDPMain)
+summary(model_Markov_onlyAlternatingOutKStar_noPartitionHomophily_noGDPMain)
 # Done
-
-
-mod4_onlyGwid <- ergm(net ~ edges + mutual +
+model_Markov_onlyAlternatingInKStar <- ergm(net ~ edges + mutual +
 							nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
-							absdiff("gdp") + nodematch("continent") + nodematch("partition") +
-							+ gwidegree(decay = 1, fixed = TRUE),
-						control = control.ergm(seed = 1))
-summary(mod4_onlyGwid)
-# Done
-
-mod4_onlyGwid_noPartitionHomophily <- ergm(net ~ edges + mutual +
-							nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
-							absdiff("gdp") + nodematch("continent") +
+							absdiff("gdp") + nodematch("continent") + nodematch("partition") + 
 							gwidegree(decay = 1, fixed = TRUE),
 						control = control.ergm(seed = 1))
-summary(mod4_onlyGwid_noPartitionHomophily)
+summary(model_Markov_onlyAlternatingInKStar)
 # Done
 
-mod4_noTriangle <- ergm(net ~ edges + mutual +
+model_Markov_onlyAlternatingInKStar_noPartitionHomophily <- ergm(net ~ edges + mutual +
 							nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
-							absdiff("gdp") + nodematch("continent") + nodematch("partition") +
+							absdiff("gdp") + nodematch("continent") + 
+							gwidegree(decay = 1, fixed = TRUE),
+						control = control.ergm(seed = 1))
+summary(model_Markov_onlyAlternatingInKStar_noPartitionHomophily)
+# Done
+
+model_Markov_noTriangle_AlternatingKStar <- ergm(net ~ edges + mutual +
+							nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
+							absdiff("gdp") + nodematch("continent") + nodematch("partition") + 
 							gwidegree(decay = 1, fixed = TRUE) + gwodegree(decay = 1, fixed = TRUE),
 							verbose = 2,
 						control = control.ergm(seed = 1, checkpoint = "mod4_noTriangle/step_%03d.RData"))
@@ -386,8 +385,18 @@ mcmc.diagnostics(mod4_onlyGwod_noPartitionHomophily_noGDPMain)
 
 # Qua dovresti stampare dei grafi con hist per mettere a confronto i due modelli, da adesso ASSUMERÒ che il modello migliore sia il primo.
 
+# alternating k-triangles --> gwesp(decay = 0, fixed = FALSE) 
+# geometrically weighted edge-wise shared partners
+# the corresponding parameter expresses the tendency for tied nodes 
+# to have multiple shared partners
+
+# alternating k-2-paths --> gwdsp(decay = 0, fixed = FALSE)
+# geometrically weighted dyad-wise shared partners
+# the corresponding parameter expresses the tendency for dyads 
+# (whether tied or not) to have multiple shared partners
+
 #social circuit model
-mod5 <- ergm(net ~ edges + mutual +
+model_SocialCirtcuit <- ergm(net ~ edges + mutual +
 					nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
 					absdiff("gdp") + nodematch("continent") + nodematch("partition") +
 					gwesp(decay = 1, fixed = T) + gwdsp(decay = 1, fixed = T),
@@ -396,29 +405,29 @@ mod5 <- ergm(net ~ edges + mutual +
 summary(mod5)
 #trying
 
-mod5_gwdsp <- ergm(net ~ edges + mutual +
+model_SocialCirtcuit_onlyK2Paths <- ergm(net ~ edges + mutual +
 						nodecov("gdp")+ nodefactor("continent") + nodefactor("partition") +
 						absdiff("gdp") + nodematch("continent") + nodematch("partition") +
 						gwdsp(decay = 1, fixed = T),
 					verbose = 2,
 					control = control.ergm(seed = 1))
-summary(mod5_gwdsp)
+summary(model_SocialCirtcuit_onlyK2Paths)
 
-mod5_gwdsp_NoMutualEffect_NoGDPMain <- ergm(net ~ edges +
+model_SocialCirtcuit_onlyK2Paths_NoMutualEffect_NoGDPMain <- ergm(net ~ edges +
 						nodefactor("continent") + nodefactor("partition") +
 						absdiff("gdp") + nodematch("continent") + nodematch("partition") +
 						gwdsp(decay = 1, fixed = T),
 					verbose = 2,
 					control = control.ergm(seed = 1, checkpoint = "mod5_gwdsp_2/step_%03d.RData"))
-summary(mod5_gwdsp_NoMutualEffect_NoGDPMain)
+summary(model_SocialCirtcuit_onlyK2Paths_NoMutualEffect_NoGDPMain)
 
-mod5_gwesp <- ergm(net ~ edges + mutual +
+model_SocialCirtcuit_onlyKTriangles <- ergm(net ~ edges + mutual +
 						nodecov("gdp") + nodefactor("continent") + nodefactor("partition") +
 						absdiff("gdp") + nodematch("continent") + nodematch("partition") +
 						gwesp(decay = 1, fixed = T),
 					verbose = 2,
 					control = control.ergm(seed = 1))
-summary(mod5_gwesp)
+summary(model_SocialCirtcuit_onlyKTriangles)
 # Degeneracy
 
 #zamn
